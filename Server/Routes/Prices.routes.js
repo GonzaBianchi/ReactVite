@@ -14,6 +14,7 @@ export default class PricesRoutes extends Routes {
   getRouter () {
     this.router
       .get('/', passport.authenticate('jwt', { session: false }), this.controller.getPrices)
+      .post('/:id', passport.authenticate('jwt', { session: false }), this.controller.updatePrice)
     return this.router
   }
 }

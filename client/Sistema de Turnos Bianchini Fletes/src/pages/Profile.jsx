@@ -1,22 +1,39 @@
-// src/pages/Profile.jsx
 import { useEffect, useState } from 'react';
-import axiosInstance from '../axioConfig'; // Importa la instancia de Axios
+import axiosInstance from '../axioConfig.js';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await axiosInstance.get('/user/profile');
-        setUser(response.data); // Establece los datos del usuario en el estado
+        console.log(response.data);
+        setUser(response.data);
       } catch (error) {
         console.error('Error al obtener el perfil', error);
+        setError('No se pudo cargar el perfil del usuario');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
+
+  if (loading) {
+    return <div>Cargando perfil...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!user) {
+    return <div>No se encontró información del usuario</div>;
+  }
 
   return (
     <div className="max-w-md mx-auto mt-10">

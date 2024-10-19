@@ -1,13 +1,13 @@
 import MySql from '../Connections/mysql.js'
 
-export default class PricesDaoMysql extends MySql {
+export default class PricesDaoMysql {
   constructor () {
-    super()
+    this.db = new MySql()
     this.table = 'prices'
-    this.#createTable()
+    this.createTable()
   }
 
-  #createTable () {
+  async createTable () {
     const query =
       `CREATE TABLE IF NOT EXISTS ${this.table} (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -15,12 +15,18 @@ export default class PricesDaoMysql extends MySql {
         price DECIMAL(10,2) DEFAULT 0
       );`
 
-    this.connection.query(query)
+    await this.db.query(query)
   }
 
   async getPrices () {
-    const query = `SELECT service_name, price FROM ${this.table} `
-    const [result] = await this.connection.promise().query(query)
+    const query = `SELECT * FROM ${this.table}`
+    const result = await this.db.query(query)
+    return result
+  }
+
+  async updatePrice (id, serviceName, price) {
+    const query = `UPDATE ${this.table} SET price = ?, service_name = ? WHERE id = ?`
+    const result = await this.db.query(query, [price, serviceName, id])
     return result
   }
 }

@@ -12,24 +12,28 @@ export default class UsersControllers {
   }
 
   addUser = async (req, res) => {
-    const user = this.userHelpers.parseUser(req.body)
-    const result = await this.db.addUser(user)
-    res.json(result)
+    try {
+      const user = this.userHelpers.parseUser(req.body)
+      const result = await this.db.addUser(user)
+      res.status(201).json(result)
+    } catch (error) {
+      console.error('Error adding user:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
   }
 
   getProfile = async (req, res) => {
     try {
       const user = req.user
       if (!user) {
-        return res.status(404).json({ error: 'Usuario no encontrado' })
+        return res.status(401).json({ error: 'Usuario no autenticado' })
       }
-
       const userProfile = await this.db.getUserByUsername(user.username)
-
       if (!userProfile) {
         return res.status(404).json({ error: 'Perfil de usuario no encontrado' })
       }
-
+      // Eliminar la contraseña del perfil antes de enviarlo
+      delete userProfile.password
       return res.status(200).json(userProfile)
     } catch (error) {
       console.error('Error al obtener perfil de usuario:', error)

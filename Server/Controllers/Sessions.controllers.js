@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { randomUUID } from 'crypto'
 import UsersDaoMysql from '../DB/DAOS/users.dao.mysql.js'
-import { validateUser, validateUserLogin } from '../Config/usersConfig.js'
+import { validateUser, validateUserLogin } from '../Schemas/UserSchema.js'
 import { ROLES } from '../Config/config.js'
 import UsersHelpers from '../Helpers/User.helper.js'
 import dotenv from 'dotenv'
@@ -124,6 +124,20 @@ export default class SessionControllers {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRETKEY)
       return res.status(200).json({ role: decoded.role, username: decoded.username })
+    } catch (err) {
+      return res.status(403).json({ message: 'Token no válido' })
+    }
+  }
+
+  getUsername = async (req, res) => {
+    const token = req.cookies.access_token
+    if (!token) {
+      return res.status(401).json({ message: 'Token no proporcionado' })
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRETKEY)
+      return res.status(200).json({ username: decoded.username })
     } catch (err) {
       return res.status(403).json({ message: 'Token no válido' })
     }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 // import { DayPicker } from 'react-day-picker'
 import Calendar from '../components/Calendar.jsx'
 import { format, startOfToday } from 'date-fns'
-import axiosInstance from '../axioConfig' 
+import axiosInstance from '../axioConfig.js' 
 
 // eslint-disable-next-line react/prop-types
 const Appointments = ({ username }) => {
@@ -26,11 +26,11 @@ const Appointments = ({ username }) => {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const response = await axiosInstance.get('/prices') 
-        const pricesData = response.data.reduce((acc, price) => {
-          acc[price.service_name] = price.price 
-          return acc 
-        }, {}) 
+        const response = await axiosInstance.get('/prices')
+        const pricesData = response.data.prices.reduce((acc, price) => {
+          acc[price.service_name] = price.price; 
+          return acc;
+        }, {});
         setPrices(pricesData) 
       } catch (error) {
         console.error('Error fetching prices:', error) 

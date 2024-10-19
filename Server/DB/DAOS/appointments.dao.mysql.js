@@ -1,15 +1,14 @@
 import MySql from '../Connections/mysql.js'
 
-export default class AppointmentsDaoMysql extends MySql {
+export default class AppointmentsDaoMysql {
   constructor () {
-    super()
+    this.db = new MySql()
     this.table = 'appointments'
-    this.#createTable()
+    this.createTable()
   }
 
-  #createTable () {
-    const query =
-        `CREATE TABLE IF NOT EXISTS ${this.table} (
+  async createTable () {
+    const query = `CREATE TABLE IF NOT EXISTS ${this.table} (
           id INT AUTO_INCREMENT PRIMARY KEY,
           id_user VARCHAR(36) NOT NULL,
           id_state INT NOT NULL,
@@ -29,78 +28,77 @@ export default class AppointmentsDaoMysql extends MySql {
           FOREIGN KEY (id_state) REFERENCES states(id) ON UPDATE CASCADE
         );`
 
-    this.connection.query(query)
+    // this.connection.query(query)
+    await this.db.query(query)
   }
 
   async addAppointment (appointment) {
     try {
       // eslint-disable-next-line camelcase
       const { username, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description } = appointment
-
       const query = `INSERT INTO appointments (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description)
       VALUES ((SELECT id FROM users WHERE username = ?),2,NULL,?,?,?,?,?,?,?,?,?,?)`
-
       // eslint-disable-next-line camelcase
-      const [result] = await this.connection.promise().query(query, [username, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description])
+      const result = await this.db.query(query, [username, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description])
       return result
     } catch (error) {
-      console.error('Error adding user:', error)
+      console.error('Error adding appointment:', error)
       throw error
     }
   }
 
   async getAppointmentsByDay (aDay) {
     const query = `
-      SELECT u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description FROM ${this.table} a
+      SELECT u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
-      INNER JOIN vans v ON v.id = a.id_van
+      LEFT JOIN vans v ON v.id = a.id_van
       WHERE day = ?;`
     try {
-      const [rows] = await this.connection.promise().query(query, [aDay])
-      if (rows.length > 0) {
-        return rows
-      } else {
-        return null
-      }
+      const rows = await this.db.query(query, [aDay])
+      return rows.length > 0 ? rows : null
     } catch (error) {
-      return 'Error fetching user by username: ' + error
+      console.error('Error fetching appointments by day:', error)
+      throw error
     }
   }
 
   async getAppointmentsByUser (usernameP) {
     const query = `
-      SELECT s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description FROM ${this.table} a
+      SELECT s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
-      INNER JOIN vans v ON v.id = a.id_van
-      WHERE username = ?;`
+      LEFT JOIN vans v ON v.id = a.id_van
+      WHERE u.username = ?;`
     try {
-      const [rows] = await this.connection.promise().query(query, [usernameP])
-      if (rows.length > 0) {
-        return rows
-      } else {
-        return null
-      }
+      return await this.db.query(query, [usernameP])
     } catch (error) {
-      return 'Error fetching user by username: ' + error
+      console.error('Error fetching appointments by username:', error)
+      throw error
     }
   }
 
   async getAvailableTimes (day, timeSlots) {
-    const availableTimes = []
-
-    for (const hora of timeSlots) {
-      const [result] = await this.db.query(
-        `SELECT COUNT(*) as total FROM ${this.table} WHERE day = ? AND schedule = ?`,
-        [day, hora]
-      )
-
-      if (result.total < 5) {
-        availableTimes.push(hora)
-      }
+    try {
+      const placeholders = timeSlots.map(() => '?').join(',')
+      const query = `
+        SELECT schedule, COUNT(*) as total 
+        FROM ${this.table} 
+        WHERE day = ? AND schedule IN (${placeholders})
+        GROUP BY schedule
+      `
+      const params = [day, ...timeSlots]
+      const results = await this.db.query(query, params)
+      const countMap = results.reduce((acc, { schedule, total }) => {
+        acc[schedule] = total
+        return acc
+      }, {})
+      return timeSlots.filter(hora => (countMap[hora] || 0) < 5)
+    } catch (error) {
+      console.error('Error in getAvailableTimes:', error)
+      throw error
     }
-
-    return availableTimes
   }
 }

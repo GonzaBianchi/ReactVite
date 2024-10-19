@@ -13,7 +13,8 @@ import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import Appointments from './pages/Appointments';
 import MyAppointments from './pages/MyAppointments';
-import AppointmentsAdministrator from './pages/AppointmentsAdministrator';
+import AdminPanel from './pages/AdminPanel';
+import AdminAppointments from './pages/AdminAppointments';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -46,7 +47,8 @@ function App() {
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/"/> } />
         <Route path="/turnero" element={isAuthenticated ? <Appointments username={username} /> : <Navigate to="/login" />} />
         <Route path="/mis-turnos" element={isAuthenticated ? <MyAppointments username={username} /> : <Navigate to="/login" />} />
-        <Route path="/panel-admin" element={isAuthenticated && role === 'admin' ? <AppointmentsAdministrator /> : <Navigate to="/" />} />
+        <Route path="/panel-admin" element={isAuthenticated && role === 'admin' ? <AdminPanel /> : <Navigate to="/" />} />
+        <Route path="/panel-admin-turnos" element={isAuthenticated && role === 'admin' ? <AdminAppointments /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

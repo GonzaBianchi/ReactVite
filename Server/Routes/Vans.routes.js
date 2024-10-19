@@ -13,8 +13,10 @@ export default class VansRoutes extends Routes {
 
   getRouter () {
     this.router
+      .get('/', passport.authenticate('jwt', { session: false }), this.controller.getVans)
       .post('/', passport.authenticate('jwt', { session: false }), this.controller.addVan)
-      .get('/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteVan)
+      .post('/:id', passport.authenticate('jwt', { session: false }), this.controller.updateVan)
+      .delete('/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteVan)
     return this.router
   }
 }

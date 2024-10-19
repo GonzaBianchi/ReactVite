@@ -28,7 +28,10 @@ const Navbar = ({ isAuthenticated, role, setIsAuthenticated }) => {
           {isAuthenticated ? (
             <>
               {role === 'admin' ? (
-                <Link to="/panel-admin" className="mr-4">Panel Admin</Link>
+                <>
+                  <Link to="/panel-admin" className="mr-4">Panel Admin</Link>
+                  <Link to="/panel-admin-turnos" className="mr-4">Administrar Turnos</Link>
+                </>
               ) : (
                 <>
                   <Link to="/turnero" className="mr-4">Turnero</Link>

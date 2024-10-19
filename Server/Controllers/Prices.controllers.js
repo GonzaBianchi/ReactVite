@@ -14,4 +14,19 @@ export default class PricesControllers {
       res.status(500).json({ error: 'Error interno del servidor' })
     }
   }
+
+  updatePrice = async (req, res) => {
+    try {
+      const id = req.params.id
+      // eslint-disable-next-line camelcase
+      const { service_name, price } = req.body
+      const newPrice = parseFloat(price)
+      const result = await this.db.updatePrice(id, service_name, newPrice)
+      console.log('Price updated:', result)
+      res.json(result)
+    } catch (error) {
+      console.error('Error al actualizar el precio:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
 }
