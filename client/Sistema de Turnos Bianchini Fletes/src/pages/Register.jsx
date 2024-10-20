@@ -1,7 +1,8 @@
 // src/pages/Register.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../axioConfig'; // Importa la instancia de Axios
+import axiosInstance from '../axioConfig';
+import { Toaster, toast } from 'sonner';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/'); // Redirige al perfil si el usuario ya está autenticado
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
   const [firstName, setFirstName] = useState('');
@@ -18,10 +19,14 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if(password !== passwordConfirmation) {
+      toast.warning('Las contraseñas no coinciden')
+      return;
+    }
     try {
       const response = await axiosInstance.post('/session/register', {
         first_name: firstName,
@@ -33,15 +38,18 @@ const Register = () => {
       });
 
       if (response.status === 201) {
+        toast.success('Registro exitoso');
         navigate('/login'); // Navega al login si el registro es exitoso
       }
     } catch (error) {
       console.error('Error en el registro', error);
+      toast.error('Error al registrar');
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10">
+      <Toaster position="bottom-right" closeButton richColors />
       <h1 className="text-2xl font-bold mb-4">Registro</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -106,6 +114,17 @@ const Register = () => {
             id="password" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="passwordConfirmation" className="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
+          <input 
+            type="password" 
+            id="passwordConfirmation" 
+            value={passwordConfirmation}
+            onChange={(e) => setPasswordConfirmation(e.target.value)} 
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             required
           />

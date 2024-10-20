@@ -58,7 +58,7 @@ export default class SessionControllers {
     console.log(result)
 
     if (result.error) {
-      return res.status(400).json({ error: result.error.message })
+      return res.status(400).json({ error: result.error.issues })
     }
 
     const { username, password } = result.data
@@ -86,10 +86,10 @@ export default class SessionControllers {
       }
 
       const user = await this.db.getUserByUsername(username)
-      if (!user) throw new Error('El usuario no existe')
+      if (!user) return res.status(400).json({ error: 'El usuario no existe' })
 
       const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) throw new Error('Contraseña invalida, intente nuevamente')
+      if (!isValid) return res.status(400).json({ error: 'Contraseña invalida, intente nuevamente' })
 
       const token = this.generateAccessToken({ username: user.username, id: user.id, role: ROLES.USER })
       const refreshToken = this.generateRefreshToken({ username: user.username, id: user.id, role: ROLES.USER })

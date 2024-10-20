@@ -14,7 +14,8 @@ export default class VansDaoMysql {
         id int PRIMARY KEY AUTO_INCREMENT,
         driver_name VARCHAR(255) NOT NULL,
         license_plate VARCHAR(7) NOT NULL UNIQUE,
-        model VARCHAR(255) NOT NULL
+        model VARCHAR(255) NOT NULL,
+        available BOOLEAN DEFAULT TRUE
     );`
 
     await this.db.query(query)
@@ -48,6 +49,17 @@ export default class VansDaoMysql {
       const { driver_name, license_plate, model } = van
       const query = `UPDATE ${this.table} SET driver_name = ?, license_plate = ?, model = ? WHERE id = ?`
       const result = await this.db.query(query, [driver_name, license_plate, model, idVan])
+      return result
+    } catch (error) {
+      console.error('Error updating van:', error)
+      throw error
+    }
+  }
+
+  async updateAvailableVan (idVan) {
+    try {
+      const query = `UPDATE ${this.table} SET available = NOT available WHERE id = ?`
+      const result = await this.db.query(query, [idVan])
       return result
     } catch (error) {
       console.error('Error updating van:', error)

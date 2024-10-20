@@ -1,7 +1,10 @@
+/* eslint-disable camelcase */
 import UsersDaoMysql from '../DB/DAOS/users.dao.mysql.js'
 import UsersHelpers from '../Helpers/User.helper.js'
 // import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
+import { validateUser, validateUserUpdate } from '../Schemas/UserSchema.js'
+import bcrypt from 'bcrypt'
 
 dotenv.config()
 
@@ -33,7 +36,8 @@ export default class UsersControllers {
         return res.status(404).json({ error: 'Perfil de usuario no encontrado' })
       }
       // Eliminar la contraseña del perfil antes de enviarlo
-      delete userProfile.password
+      // delete userProfile.password
+      console.log(userProfile)
       return res.status(200).json(userProfile)
     } catch (error) {
       console.error('Error al obtener perfil de usuario:', error)
@@ -41,35 +45,59 @@ export default class UsersControllers {
     }
   }
 
-  // updateUser = async (req, res) => {
-  //   const userId = req.params.id
-  //   const { firstName, lastName, phone, email, password, password2, age } = req.body
-  //   // Crear objeto con los datos a actualizar
-  //   const userData = {}
-  //   // Actualizar userData con los campos proporcionados
-  //   if (firstName) userData.firstName = firstName
-  //   if (lastName) userData.lastName = lastName
-  //   if (phone) userData.phone = phone
-  //   if (email) userData.email = email
-  //   if (password.trim() !== '' && password2.trim() !== '') {
-  //     if (password !== password2) {
-  //       return res.status(400).json({ error: 'Las contraseñas no coinciden' })
-  //     } else {
-  //       const hash = bcrypt.hashSync(password, 10)
-  //       userData.password = hash
-  //     }
-  //   }
+  updateUser = async (req, res) => {
+    const user = this.userHelpers.parseUser(req.body)
+    const userId = req.params.id
 
-  //   if (age) userData.age = age
-  //   try {
-  //     const result = await this.db.updateUser(userId, userData)
-  //     if (result.affectedRows === 0) {
-  //       return res.status(404).json({ error: 'Usuario no encontrado' })
-  //     }
-  //     res.json({ message: 'Usuario actualizado con éxito' })
-  //   } catch (error) {
-  //     console.error('Error al actualizar el usuario:', error)
-  //     res.status(500).json({ error: 'Error al actualizar el usuario' })
-  //   }
-  // }
+    if (!user.password || user.password.trim() === '') {
+      const result = validateUserUpdate(user)
+
+      if (result.error) {
+        return res.status(400).json({ error: result.error.issues })
+      }
+
+      const { first_name, last_name, phone, email, username } = result.data
+
+      const updatedUser = {
+        first_name,
+        last_name,
+        phone,
+        email,
+        username
+      }
+
+      try {
+        const saveResult = await this.db.updateUser(userId, updatedUser)
+        console.log(saveResult)
+        return res.status(200).json({ message: 'Usuario actualizado correctamente', saveResult })
+      } catch (error) {
+        console.error('Error al actualizar el usuario:', error)
+        return res.status(500).json({ error: 'Error interno del servidor' })
+      }
+    }
+
+    const result = validateUser(user)
+
+    if (result.error) {
+      return res.status(400).json({ error: result.error.issues })
+    }
+
+    const { password } = result.data
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const updatedUser = {
+      ...result.data,
+      password: hashedPassword
+    }
+
+    try {
+      const saveResult = await this.db.updateUser(userId, updatedUser)
+      console.log(saveResult)
+      return res.status(200).json({ message: 'Usuario actualizado correctamente', saveResult })
+    } catch (error) {
+      console.error('Error al actualizar el usuario:', error)
+      return res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
 }

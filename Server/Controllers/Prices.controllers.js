@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import PricesDaoMysql from '../DB/DAOS/prices.dao.mysql.js'
 
 export default class PricesControllers {
@@ -8,6 +9,7 @@ export default class PricesControllers {
   getPrices = async (req, res) => {
     try {
       const prices = await this.db.getPrices()
+      console.log(prices)
       res.status(200).json({ prices })
     } catch (error) {
       console.error('Error al obtener los precios:', error)
@@ -18,11 +20,13 @@ export default class PricesControllers {
   updatePrice = async (req, res) => {
     try {
       const id = req.params.id
-      // eslint-disable-next-line camelcase
       const { service_name, price } = req.body
+
+      if (price === '') return res.status(400).json({ error: 'El precio no puede estar vacío' })
+      if (service_name === '') return res.status(400).json({ error: 'El servicio no puede estar vacío' })
+
       const newPrice = parseFloat(price)
       const result = await this.db.updatePrice(id, service_name, newPrice)
-      console.log('Price updated:', result)
       res.json(result)
     } catch (error) {
       console.error('Error al actualizar el precio:', error)

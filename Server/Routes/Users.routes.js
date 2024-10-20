@@ -14,6 +14,7 @@ export default class UsersRoutes extends Routes {
   getRouter () {
     this.router
       .get('/profile', passport.authenticate('jwt', { session: false }), this.controller.getProfile)
+      .post('/:id', passport.authenticate('jwt', { session: false }), this.controller.updateUser)
     return this.router
   }
 }

@@ -1,5 +1,5 @@
+/* eslint-disable camelcase */
 import MySql from '../Connections/mysql.js'
-// import { validateUser } from '../../Models/Users.js'
 
 export default class UsersDaoMysql {
   constructor () {
@@ -34,14 +34,30 @@ export default class UsersDaoMysql {
 
   async addUser (user) {
     try {
-      // eslint-disable-next-line camelcase
       const { id, first_name, last_name, phone, email, username, password } = user
       const query = `INSERT INTO ${this.table} (id, first_name, last_name, phone, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)`
-      // eslint-disable-next-line camelcase
       const result = await this.db.query(query, [id, first_name, last_name, phone, email, username, password])
       return result
     } catch (error) {
       console.error('Error adding user:', error)
+      throw error
+    }
+  }
+
+  async updateUser (id, user) {
+    try {
+      if (!user.password || user.password.trim() === '') {
+        const { first_name, last_name, phone, email, username } = user
+        const query = `UPDATE ${this.table} SET first_name = ?, last_name = ?, phone = ?, email = ?, username = ? WHERE id = ?`
+        const result = await this.db.query(query, [first_name, last_name, phone, email, username, id])
+        return result
+      }
+      const { first_name, last_name, phone, email, username, password } = user
+      const query = `UPDATE ${this.table} SET first_name = ?, last_name = ?, phone = ?, email = ?, username = ?, password = ? WHERE id = ?`
+      const result = await this.db.query(query, [first_name, last_name, phone, email, username, password, id])
+      return result
+    } catch (error) {
+      console.error('Error updating user:', error)
       throw error
     }
   }

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import axiosInstance from '../axioConfig'; // Importa la instancia de Axios
+import axiosInstance from '../axioConfig'
+import logo from '../assets/logo.webp';
 
 // eslint-disable-next-line react/prop-types
 const Navbar = ({ isAuthenticated, role, setIsAuthenticated }) => {
@@ -22,7 +23,9 @@ const Navbar = ({ isAuthenticated, role, setIsAuthenticated }) => {
   return (
     <nav className="bg-gray-800 p-4 text-white">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">Mi App</Link>
+        <Link to="/" className="text-xl font-bold">
+          <img src={logo} alt="logo" className="h-14 rounded-full" />
+        </Link>
         <div>
           <Link to="/" className="mr-4">Home</Link>
           {isAuthenticated ? (

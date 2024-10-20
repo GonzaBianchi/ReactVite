@@ -80,11 +80,10 @@ const Appointments = ({ username }) => {
     const formattedDate = format(day, 'yyyy-MM-dd')
 
     try {
-      const response = await axiosInstance.get(`/appointment/available-times?day=${formattedDate}`)
-      const data = await response.json()
-
-      if (data.availableTimes.length > 0) {
-        setAvailableTimeSlots(data.availableTimes)
+      const response = await axiosInstance.get(`/appointment/available-times/${formattedDate}`)
+      console.log(response)
+      if (response.data.availableTimes.length > 0) {
+        setAvailableTimeSlots(response.data.availableTimes)
         setNoSlotsAvailable(false)
       } else {
         setAvailableTimeSlots([])

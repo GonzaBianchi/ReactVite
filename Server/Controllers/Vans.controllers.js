@@ -75,6 +75,18 @@ export default class VansControllers {
     }
   }
 
+  updateAvailableVan = async (req, res) => {
+    try {
+      const vanId = req.params.id
+
+      const result = await this.db.updateAvailableVan(vanId)
+      res.json(result)
+    } catch (error) {
+      console.error('Error al actualizar el estado de la camioneta:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
+
   deleteVan = async (req, res) => {
     try {
       const vanId = req.params.id

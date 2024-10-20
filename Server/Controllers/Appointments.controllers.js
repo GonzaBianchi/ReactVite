@@ -52,7 +52,7 @@ export default class AppointmentsControllers {
 
   getAvailableTimes = async (req, res) => {
     try {
-      const { day } = req.query
+      const { day } = req.params
       if (!day) {
         return res.status(400).json({ error: 'La fecha es requerida' })
       }
@@ -64,36 +64,4 @@ export default class AppointmentsControllers {
       return res.status(500).json({ error: 'Error al obtener los horarios disponibles' })
     }
   }
-
-  // updateUser = async (req, res) => {
-  //   const userId = req.params.id
-  //   const { firstName, lastName, phone, email, password, password2, age } = req.body
-  //   // Crear objeto con los datos a actualizar
-  //   const userData = {}
-  //   // Actualizar userData con los campos proporcionados
-  //   if (firstName) userData.firstName = firstName
-  //   if (lastName) userData.lastName = lastName
-  //   if (phone) userData.phone = phone
-  //   if (email) userData.email = email
-  //   if (password.trim() !== '' && password2.trim() !== '') {
-  //     if (password !== password2) {
-  //       return res.status(400).json({ error: 'Las contraseñas no coinciden' })
-  //     } else {
-  //       const hash = bcrypt.hashSync(password, 10)
-  //       userData.password = hash
-  //     }
-  //   }
-
-  //   if (age) userData.age = age
-  //   try {
-  //     const result = await this.db.updateUser(userId, userData)
-  //     if (result.affectedRows === 0) {
-  //       return res.status(404).json({ error: 'Usuario no encontrado' })
-  //     }
-  //     res.json({ message: 'Usuario actualizado con éxito' })
-  //   } catch (error) {
-  //     console.error('Error al actualizar el usuario:', error)
-  //     res.status(500).json({ error: 'Error al actualizar el usuario' })
-  //   }
-  // }
 }

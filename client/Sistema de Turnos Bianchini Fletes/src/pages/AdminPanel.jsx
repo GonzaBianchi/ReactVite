@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import axiosInstance from '../axioConfig.js';
-import { Toaster, toast } from 'sonner';
+import { useState, useEffect } from 'react'
+import axiosInstance from '../axioConfig.js'
+import { Toaster, toast } from 'sonner'
 
 const AdminPanel = () => {
   const [prices, setPrices] = useState([]);
@@ -73,7 +73,7 @@ const AdminPanel = () => {
       }
     } catch (error) {
       console.error('Error al actualizar el precio:', error);
-      toast.error('Error al actualizar el precio. Por favor, intente de nuevo.');
+      toast.error(error.response.data.error);
     }
   };
 
@@ -91,7 +91,20 @@ const AdminPanel = () => {
   const handleCloseVanModal = () => {
     setIsVanModalOpen(false);
     setEditingVan(null);
-  };
+  }
+
+  const handleAvailableVan = async (idVan) => {
+    try {
+      const response = await axiosInstance.post(`/van/available/${idVan}`);
+      if (response.status === 200) {
+        setVans(vans.map(v => v.id === idVan ? { ...v, available: !v.available } : v));
+        toast.success('Cambio de estado de la camioneta exitoso');
+      }
+    } catch (error) {
+      console.error('Error al cambiar el estado de la camioneta:', error);
+      toast.error('Error al cambiar el estado de la camioneta. Por favor, intente de nuevo.');
+    }
+  }
 
   const handleSaveVan = async (e) => {
     e.preventDefault();
@@ -175,27 +188,34 @@ const AdminPanel = () => {
             Agregar nueva camioneta
           </button>
         </div>
-        <div className="grid grid-cols-4 gap-4 mb-2 font-bold">
-          <div>Conductor</div>
-          <div>Placa</div>
+        <div className="grid grid-cols-5 gap-4 mb-2 font-bold">
+          <div>Dueño</div>
+          <div>Patente</div>
           <div>Modelo</div>
+          <div>Disponible</div>
           <div>Acciones</div>
         </div>
         <div className="h-96 overflow-y-auto">
           {vans.map((van) => (
-            <div key={van.id} className="grid grid-cols-4 gap-4 mb-2 items-center">
+            <div key={van.id} className="grid grid-cols-5 gap-4 mb-6 items-center">
               <div>{van.driver_name}</div>
               <div>{van.license_plate}</div>
               <div>{van.model}</div>
+              <div>{van.available ? 'Disponible' : 'No disponible'}</div>
               <div className="space-x-2">
                 <button
+                  onClick={() => handleAvailableVan(van.id)}
+                  className="bg-green-500 text-white px-2 py-2 rounded">
+                  {van.available ? 'Deshab' : 'Habilitar'}
+                </button>
+                <button
                   onClick={() => handleEditVan(van)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded">
+                  className="bg-blue-500 text-white px-2 py-2 rounded">
                   Editar
                 </button>
                 <button
                   onClick={() => handleDeleteVan(van.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded">
+                  className="bg-red-500 text-white px-2 py-2 rounded">
                   Eliminar
                 </button>
               </div>
@@ -268,7 +288,7 @@ const AdminPanel = () => {
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="license_plate" className="block mb-2">Placa</label>
+                <label htmlFor="license_plate" className="block mb-2">Patente</label>
                 <input
                   type="text"
                   id="license_plate"

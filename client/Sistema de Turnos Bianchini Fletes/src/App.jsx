@@ -41,7 +41,7 @@ function App() {
     <Router>
       <Navbar isAuthenticated={isAuthenticated} role={role} setIsAuthenticated={setIsAuthenticated} />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home isAuthenticated={isAuthenticated} role={role} />} />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated}  setRole={setRole} setUsernameSession={setUsernameSession} />} />
         <Route path="/register" element={isAuthenticated ? <Navigate to="/"/> : <Register />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/"/> } />

@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../axioConfig'; // Importa la instancia de Axios
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axiosInstance from '../axioConfig'
+import { Toaster, toast } from 'sonner'
 
 // eslint-disable-next-line react/prop-types
 const Login = ({ setIsAuthenticated,  setRole, setUsernameSession }) => {
@@ -28,11 +29,13 @@ const Login = ({ setIsAuthenticated,  setRole, setUsernameSession }) => {
       }
     } catch (error) {
       console.error('Error en el inicio de sesión', error);
+      toast.error(error.response.data.error);
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10">
+      <Toaster position="bottom-right" closeButton richColors />
       <h1 className="text-2xl font-bold mb-4">Iniciar Sesión</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
