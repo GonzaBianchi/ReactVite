@@ -9,7 +9,6 @@ export default class PricesControllers {
   getPrices = async (req, res) => {
     try {
       const prices = await this.db.getPrices()
-      console.log(prices)
       res.status(200).json({ prices })
     } catch (error) {
       console.error('Error al obtener los precios:', error)

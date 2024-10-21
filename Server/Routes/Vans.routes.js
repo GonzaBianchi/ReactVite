@@ -14,6 +14,7 @@ export default class VansRoutes extends Routes {
   getRouter () {
     this.router
       .get('/', passport.authenticate('jwt', { session: false }), this.controller.getVans)
+      .get('/available', passport.authenticate('jwt', { session: false }), this.controller.getAvailableVans)
       .post('/', passport.authenticate('jwt', { session: false }), this.controller.addVan)
       .post('/:id', passport.authenticate('jwt', { session: false }), this.controller.updateVan)
       .post('/available/:id', passport.authenticate('jwt', { session: false }), this.controller.updateAvailableVan)

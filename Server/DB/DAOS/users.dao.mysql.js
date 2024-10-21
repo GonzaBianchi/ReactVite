@@ -32,6 +32,17 @@ export default class UsersDaoMysql {
     }
   }
 
+  async getUserIdByUsername (usernameP) {
+    const query = `SELECT id FROM ${this.table} WHERE username = ?;`
+    try {
+      const rows = await this.db.query(query, [usernameP])
+      return rows.length > 0 ? rows[0].id : null
+    } catch (error) {
+      console.error('Error fetching user id by username:', error)
+      throw error
+    }
+  }
+
   async addUser (user) {
     try {
       const { id, first_name, last_name, phone, email, username, password } = user

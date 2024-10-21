@@ -18,6 +18,17 @@ export default class VansControllers {
     }
   }
 
+  getAvailableVans = async (req, res) => {
+    try {
+      const vans = await this.db.getAvailableVans()
+      // console.log('Vans retrieved:', vans)
+      res.status(200).json({ vans })
+    } catch (error) {
+      console.error('Error al obtener las camionetas disponibles:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
+
   addVan = async (req, res) => {
     const van = req.body
     const result = validateVan(van)

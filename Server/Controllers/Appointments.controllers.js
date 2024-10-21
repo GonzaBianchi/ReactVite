@@ -1,5 +1,9 @@
+/* eslint-disable camelcase */
 import AppointmentsDaoMysql from '../DB/DAOS/appointments.dao.mysql.js'
 import AppointmentsHelpers from '../Helpers/Appointment.helper.js'
+import UsersDaoMysql from '../DB/DAOS/users.dao.mysql.js'
+import VansDaoMysql from '../DB/DAOS/vans.dao.mysql.js'
+import { validateAppointment } from '../Schemas/AppointmentSchema.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -7,17 +11,37 @@ dotenv.config()
 export default class AppointmentsControllers {
   constructor () {
     this.db = new AppointmentsDaoMysql()
+    this.usersDb = new UsersDaoMysql()
+    this.vansDb = new VansDaoMysql()
     this.appointmentHelpers = new AppointmentsHelpers()
   }
 
   addAppointment = async (req, res) => {
     try {
-      const appointment = this.appointmentHelpers.parseAppointment(req.body)
+      // Validar las direcciones usando el schema de Zod
+      const validationResult = validateAppointment(req.body)
+      if (!validationResult.success) {
+        return res.status(400).json({ error: 'Datos de dirección inválidos', details: validationResult.error.errors })
+      }
+
+      const userId = await this.usersDb.getUserIdByUsername(req.body.username)
+
+      // Ajustar el formato de duración
+      const duration = req.body.duration + ':00' // Añadir segundos si no están presentes
+
+      const newAppointment = {
+        id_user: userId,
+        ...req.body,
+        duration
+      }
+
+      const appointment = this.appointmentHelpers.parseAppointment(newAppointment)
+      console.log('Parsed appointment:', appointment)
       const result = await this.db.addAppointment(appointment)
       res.status(201).json(result)
     } catch (error) {
       console.error('Error adding appointment:', error)
-      res.status(500).json({ error: 'Error interno del servidor' })
+      res.status(500).json({ error: 'Error interno del servidor', details: error.message })
     }
   }
 
@@ -62,6 +86,38 @@ export default class AppointmentsControllers {
     } catch (error) {
       console.error('Error al obtener horarios disponibles:', error)
       return res.status(500).json({ error: 'Error al obtener los horarios disponibles' })
+    }
+  }
+
+  updateVanAppointment = async (req, res) => {
+    try {
+      const { id } = req.params
+      const { id_van } = req.body
+      const result = await this.db.updateVanAppointment(id, id_van)
+      if (result.affectedRows > 0) {
+        await this.vansDb.updateAvailableVan(id_van)
+        return res.status(200).json({ message: 'Turno actualizado correctamente', result })
+      } else {
+        return res.status(404).json({ error: 'No se encontró el turno para actualizar' })
+      }
+    } catch (error) {
+      console.error('Error al actualizar el turno:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
+
+  deleteAppointment = async (req, res) => {
+    try {
+      const appointmentId = req.params.id
+      const result = await this.db.deleteAppointment(appointmentId)
+      if (result.affectedRows > 0) {
+        res.json({ success: true, message: 'Turno eliminado exitosamente' })
+      } else {
+        res.status(404).json({ success: false, message: 'Turno no encontrado' })
+      }
+    } catch (error) {
+      console.error('Error al eliminar el turno:', error)
+      res.status(500).json({ success: false, error: 'Error interno del servidor' })
     }
   }
 }

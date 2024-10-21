@@ -32,6 +32,17 @@ export default class VansDaoMysql {
     }
   }
 
+  async getAvailableVans () {
+    try {
+      const query = `SELECT * FROM ${this.table} WHERE available = TRUE`
+      const result = await this.db.query(query)
+      return result
+    } catch (error) {
+      console.error('Error fetching available vans:', error)
+      throw error
+    }
+  }
+
   async addVan (van) {
     try {
       const { driver_name, license_plate, model } = van

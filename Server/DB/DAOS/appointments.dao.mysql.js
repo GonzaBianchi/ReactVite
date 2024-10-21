@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import MySql from '../Connections/mysql.js'
 
 export default class AppointmentsDaoMysql {
@@ -34,12 +35,39 @@ export default class AppointmentsDaoMysql {
 
   async addAppointment (appointment) {
     try {
-      // eslint-disable-next-line camelcase
-      const { username, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description } = appointment
-      const query = `INSERT INTO appointments (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description)
-      VALUES ((SELECT id FROM users WHERE username = ?),2,NULL,?,?,?,?,?,?,?,?,?,?)`
-      // eslint-disable-next-line camelcase
-      const result = await this.db.query(query, [username, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description])
+      const {
+        id_user,
+        day,
+        schedule,
+        start_address,
+        end_address,
+        duration,
+        cost,
+        stairs,
+        distance,
+        staff,
+        description
+      } = appointment
+
+      const query = `INSERT INTO appointments 
+        (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description)
+        VALUES (?, 2, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+      const values = [
+        id_user,
+        day,
+        schedule,
+        start_address,
+        end_address,
+        duration,
+        cost,
+        stairs,
+        distance,
+        staff ? 1 : 0,
+        description
+      ]
+
+      const result = await this.db.query(query, values)
       return result
     } catch (error) {
       console.error('Error adding appointment:', error)
@@ -49,12 +77,13 @@ export default class AppointmentsDaoMysql {
 
   async getAppointmentsByDay (aDay) {
     const query = `
-      SELECT u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      SELECT a.id, u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
       FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
       LEFT JOIN vans v ON v.id = a.id_van
-      WHERE day = ?;`
+      WHERE a.day = ?
+      ORDER BY a.schedule ASC;`
     try {
       const rows = await this.db.query(query, [aDay])
       return rows.length > 0 ? rows : null
@@ -66,7 +95,7 @@ export default class AppointmentsDaoMysql {
 
   async getAppointmentsByUser (usernameP) {
     const query = `
-      SELECT s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      SELECT a.id, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
       FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
@@ -98,6 +127,28 @@ export default class AppointmentsDaoMysql {
       return timeSlots.filter(hora => (countMap[hora] || 0) < 5)
     } catch (error) {
       console.error('Error in getAvailableTimes:', error)
+      throw error
+    }
+  }
+
+  async updateVanAppointment (idAppointment, idVan) {
+    try {
+      const query = 'UPDATE appointments SET id_van = ? WHERE id = ?'
+      const result = await this.db.query(query, [idVan, idAppointment])
+      return result
+    } catch (error) {
+      console.error('Error updating appointment:', error)
+      throw error
+    }
+  }
+
+  async deleteAppointment (idAppointment) {
+    try {
+      const query = 'DELETE FROM appointments WHERE id = ?'
+      const result = await this.db.query(query, [idAppointment])
+      return result
+    } catch (error) {
+      console.error('Error deleting appointment:', error)
       throw error
     }
   }
