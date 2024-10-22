@@ -77,7 +77,7 @@ export default class AppointmentsDaoMysql {
 
   async getAppointmentsByDay (aDay) {
     const query = `
-      SELECT a.id, u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      SELECT a.id, a.id_user, u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
       FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
@@ -133,9 +133,19 @@ export default class AppointmentsDaoMysql {
 
   async updateVanAppointment (idAppointment, idVan) {
     try {
+      // Primero obtener la van actual
+      const getCurrentVanQuery = 'SELECT id_van FROM appointments WHERE id = ?'
+      const [currentVan] = await this.db.query(getCurrentVanQuery, [idAppointment])
+
+      // Luego hacer el update
       const query = 'UPDATE appointments SET id_van = ? WHERE id = ?'
       const result = await this.db.query(query, [idVan, idAppointment])
-      return result
+
+      // Retornar tanto el resultado como la van anterior
+      return {
+        result,
+        previousVanId: currentVan[0]?.id_van
+      }
     } catch (error) {
       console.error('Error updating appointment:', error)
       throw error

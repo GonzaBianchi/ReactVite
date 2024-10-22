@@ -18,6 +18,7 @@ const Calendar = ({
         month={currentMonth}
         onMonthChange={setCurrentMonth}
         className="border rounded-lg"
+        showOutsideDays={true}
         classNames={{
           months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
           month: "space-y-4",
@@ -32,30 +33,45 @@ const Calendar = ({
           head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
           row: "flex w-full mt-2",
           cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-          day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+          day: "h-9 w-9 p-0 font-normal",
           day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
           day_today: "bg-accent text-accent-foreground",
           day_outside: "text-muted-foreground opacity-50",
-          day_disabled: "text-muted-foreground opacity-50",
-          day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-          day_hidden: "invisible",
+          day_disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
+          day_range_middle: "bg-accent text-accent-foreground",
+          day_hidden: "hidden",  // Cambiado de 'invisible' a 'hidden'
           ...Array.from({ length: 7 }).reduce((acc, _, index) => ({
             ...acc,
-            [`day_${index}`]: "w-9 h-9 inline-flex items-center justify-center border border-gray-200 text-sm",
+            [`day_${index}`]: "w-9 h-9 inline-flex items-center justify-center border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
           }), {}),
         }}
+        modifiers={{
+          outside: (date) => {
+            return date.getMonth() !== currentMonth.getMonth();
+          }
+        }}
+        modifiersClassNames={{
+          outside: "opacity-50 cursor-pointer hover:bg-gray-100",
+          disabled: "cursor-not-allowed opacity-50"
+        }}
         components={{
-          IconLeft: () => <ChevronLeft className="w-4 h-4" />,
-          IconRight: () => <ChevronRight className="w-4 h-4" />,
+          IconLeft: () => <ChevronLeftButton />,
+          IconRight: () => <ChevronRightButton />,
         }}
       />
     </div>
   )
 }
 
-function ChevronLeft() {
-    return (
-        <svg
+// Componentes de botones de navegación mejorados
+const ChevronLeftButton = () => {
+  return (
+    <button
+      type="button"
+      aria-label="Mes anterior"
+      className="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -65,15 +81,21 @@ function ChevronLeft() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        >
+      >
         <polyline points="15 18 9 12 15 6" />
-        </svg>
-    )
+      </svg>
+    </button>
+  )
 }
 
-function ChevronRight() {
-    return (
-        <svg
+const ChevronRightButton = () => {
+  return (
+    <button
+      type="button"
+      aria-label="Mes siguiente"
+      className="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -83,10 +105,11 @@ function ChevronRight() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        >
+      >
         <polyline points="9 18 15 12 9 6" />
-        </svg>
-    )
+      </svg>
+    </button>
+  )
 }
 
 export default Calendar;

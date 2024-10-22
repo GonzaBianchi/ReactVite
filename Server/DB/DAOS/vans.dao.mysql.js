@@ -78,6 +78,17 @@ export default class VansDaoMysql {
     }
   }
 
+  async updateVanAvailability (idVan, available) {
+    try {
+      const query = `UPDATE ${this.table} SET available = ? WHERE id = ?`
+      const result = await this.db.query(query, [available, idVan])
+      return result
+    } catch (error) {
+      console.error('Error updating van:', error)
+      throw error
+    }
+  }
+
   async deleteVan (idVan) {
     try {
       const query = `DELETE FROM ${this.table} WHERE id = ?`

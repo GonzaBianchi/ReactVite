@@ -43,7 +43,7 @@ const Register = () => {
       }
     } catch (error) {
       console.error('Error en el registro', error);
-      toast.error('Error al registrar');
+      toast.error(error.response.data.error[0].message);
     }
   };
 

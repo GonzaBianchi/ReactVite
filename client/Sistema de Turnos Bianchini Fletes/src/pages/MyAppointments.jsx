@@ -72,7 +72,7 @@ const MisTurnos = ({ username }) => {
       return;
     }
     try {
-      const response = await axiosInstance.delete(`/appointment/${id}`);
+      const response = await axiosInstance.delete(`/appointment/user/${id}`);
       if (response.status === 200) {
         setAppointments(prevAppointments => prevAppointments.filter(a => a.id !== id));
         toast.success('Turno eliminado exitosamente');
@@ -106,24 +106,26 @@ const MisTurnos = ({ username }) => {
           <table className="min-w-full table-auto bg-white shadow-md rounded-lg">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 text-left text-gray-700">Fecha</th>
-                <th className="px-4 py-2 text-left text-gray-700">Hora</th>
-                <th className="px-4 py-2 text-left text-gray-700">Costo estimado</th>
-                <th className="px-4 py-2 text-left text-gray-700">Acciones</th>
+                <th className="px-4 py-2 text-center text-gray-700 ">Fecha</th>
+                <th className="px-4 py-2 text-center text-gray-700">Hora</th>
+                <th className="px-4 py-2 text-center text-gray-700">Costo estimado</th>
+                <th className="px-4 py-2 text-center text-gray-700">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {appointments.map((appointment) => (
                 <tr key={appointment.id} className="border-b border-gray-200">
-                  <td className="px-4 py-2">{new Date(appointment.day).toLocaleDateString()}</td>
-                  <td className="px-4 py-2">{appointment.schedule}</td>
-                  <td className="px-4 py-2">{appointment.cost}</td>
-                  <td className="px-4 py-2">
-                  <button
-                    onClick={() => handleDeleteAppointment(appointment.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded w-fit">
-                    Cancelar turno
-                  </button>
+                <td className="px-4 py-2 text-center">{new Date(appointment.day).toLocaleDateString()}</td>
+                <td className="p-2 text-center">
+                  {appointment.schedule.split(':').slice(0, 2).join(':')}
+                </td>
+                  <td className="px-4 py-2 text-center">{appointment.cost}</td>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      onClick={() => handleDeleteAppointment(appointment.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded w-fit">
+                      Cancelar turno
+                    </button>
                   </td>
                 </tr>
               ))}

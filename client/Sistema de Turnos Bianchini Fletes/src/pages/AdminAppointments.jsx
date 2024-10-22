@@ -11,9 +11,12 @@ const AdminAppointments = () => {
   const [message, setMessage] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showModalDetails, setShowModalDetails] = useState(false);
-  const [showModalVans, setShowModalVans] = useState(false)
+  const [showModalVans, setShowModalVans] = useState(false);
   const [availableVans, setAvailableVans] = useState([]);
   const [selectedVan, setSelectedVan] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelUserInfo, setCancelUserInfo] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
 
 
   const fetchAppointments = async (date) => {
@@ -53,23 +56,7 @@ const AdminAppointments = () => {
       setSelectedDate(date);
     }
   };
-
-  const handleCancelAppointment = async (appointment) => {
-    // Implementar lógica para cancelar el turno
-    console.log('Cancelar turno:', appointment);
-  };
-
-  const handleViewAppointment = (appointment) => {
-    setSelectedAppointment(appointment);
-    setShowModalDetails(true);
-  };
   
-  const handleAddVan = async (appointment) => {
-    await fetchAvailableVans();
-    setSelectedAppointment(appointment);
-    setShowModalVans(true);
-  };
-
   const fetchAvailableVans = async () => {
     try {
       const response = await axiosInstance.get('van/available');
@@ -83,6 +70,33 @@ const AdminAppointments = () => {
   const handleSelectVan = (van) => {
     setSelectedVan(van);
   };
+  
+  const handleViewAppointment = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowModalDetails(true);
+  };
+  
+  const handleAddVan = async (appointment) => {
+    setSelectedAppointment(appointment); // Aseguramos que selectedAppointment esté actualizado
+    await fetchAvailableVans();
+    setShowModalVans(true);
+    setShowModalDetails(false); // Cerramos el modal de detalles si está abierto
+  };
+
+  const handleCloseModal = () => {
+    if (showModalVans) {
+      setShowModalVans(false);
+      setSelectedVan(null);
+    }
+    if (showModalDetails) {
+      setShowModalDetails(false);
+    }
+    if (showUserModal) {
+      setCancelUserInfo([])
+      setShowUserModal(false)
+    }
+  };
+
 
   const handleAssignVan = async () => {
     try {
@@ -91,27 +105,42 @@ const AdminAppointments = () => {
       });
       setShowModalVans(false);
       setSelectedVan(null);
-      // Actualizar el estado del turno en la lista de turnos
-      const updatedAppointments = appointments.map((appointment) => {
-        if (appointment.id === selectedAppointment.id) {
-          return { ...appointment, id_van: selectedVan.id };
-        }
-        return appointment;
-      });
-      setAppointments(updatedAppointments);
+      
+      await fetchAppointments(selectedDate);
+      toast.success('Van asignada correctamente');
     } catch (error) {
       console.error('Error al asignar la camioneta al turno:', error);
-      setMessage('Error al asignar la camioneta al turno. Por favor, intente nuevamente.');
       toast.error('Error al asignar la camioneta al turno. Por favor, intente nuevamente.')
     }
   };
 
-  const handleCloseModal = () => {
-    setSelectedAppointment(null);
-    if (showModalVans){
-      setShowModalVans(false);
-    } else {
-      setShowModalDetails(false);
+  const handleCancelAppointment = async (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelAppointment = async () => {
+    try {
+      const response = await axiosInstance.delete(`appointment/admin/${selectedAppointment.id}`, {
+        data: { id_user: selectedAppointment.id_user }
+      });
+      
+      if (response.status === 200) {
+        // Guardar la información del usuario antes de actualizar la lista
+        console.log(response.data)
+        setCancelUserInfo(response.data.userInfo);
+        setShowUserModal(true)
+        
+        // Actualizar la lista de turnos
+        await fetchAppointments(selectedDate);
+        
+        toast.success('Turno cancelado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error al cancelar el turno:', error);
+      toast.error('Error al cancelar el turno. Por favor, intente nuevamente.');
+    } finally {
+      setShowCancelModal(false);
     }
   };
 
@@ -138,13 +167,11 @@ const AdminAppointments = () => {
           <thead>
             <tr className="bg-gray-200">
               <th className="border p-2 text-center">Nombre</th>
-              <th className="border p-2 text-center">Conductor</th>
+              <th className="border p-2 text-center">Movil</th>
               <th className="border p-2 text-center">Horario</th>
               <th className="border p-2 text-center">Dirección inicial</th>
               <th className="border p-2 text-center">Dirección final</th>
               <th className="border p-2 text-center">Costo estimado</th>
-              <th className="border p-2 text-center">Piso</th>
-              <th className="border p-2 text-center">Personal</th>
               <th className="border p-2 text-center">Estado</th>
               <th className="border p-2 text-center">Acciones</th>
             </tr>
@@ -160,10 +187,6 @@ const AdminAppointments = () => {
                 <td className="border p-2 text-center">{appointment.start_address}</td>
                 <td className="border p-2 text-center">{appointment.end_address}</td>
                 <td className="border p-2 text-center">${appointment.cost}</td>
-                <td className="border p-2 text-center">{appointment.stairs}</td>
-                <td className="border p-2 text-center">
-                  {appointment.staff ? 'Si' : 'No'}
-                </td>
                 <td className="border p-2 text-center">{appointment.state_name}</td>
                 <td className="border p-2 text-center">
                   <button
@@ -175,14 +198,14 @@ const AdminAppointments = () => {
                   {appointment.driver_name ? (
                     <button
                       className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAddVan(selectedAppointment)}
+                      onClick={() => handleAddVan(appointment)} // Pasamos directamente el appointment
                     >
                       Cambiar Van     
                     </button>
                   ) : (
                     <button
                       className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAddVan(selectedAppointment)}
+                      onClick={() => handleAddVan(appointment)} // Pasamos directamente el appointment
                     >
                       Agregar Van
                     </button>
@@ -215,7 +238,7 @@ const AdminAppointments = () => {
             <div className="p-6 grid grid-cols-2 gap-4">
               <div>
                 <p><strong>Nombre:</strong> {selectedAppointment.first_name} {selectedAppointment.last_name}</p>
-                <p><strong>Conductor:</strong> {selectedAppointment.driver_name || 'N/A'}</p>
+                <p><strong>Movil:</strong> {selectedAppointment.driver_name || 'N/A'}</p>
                 <p><strong>Horario:</strong> {selectedAppointment.schedule}</p>
               </div>
               <div>
@@ -285,16 +308,69 @@ const AdminAppointments = () => {
               </ul>
             </div>
             <div className="px-6 py-4 border-t flex justify-end">
-              {!selectedAppointment.id_van && (
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-                  onClick={() => handleAssignVan()}
-                >
-                  Agregar Van
-                </button>
-              )}
+                {selectedAppointment.driver_name ? (
+                    <button
+                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                      onClick={() => handleAssignVan()} // Pasamos directamente el appointment
+                    >
+                      Cambiar Van     
+                    </button>
+                  ) : (
+                    <button
+                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                      onClick={() => handleAssignVan()} // Pasamos directamente el appointment
+                    >
+                      Agregar Van
+                    </button>
+                  )}
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={handleCloseModal}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de confirmación de cancelación */}
+      {showCancelModal && selectedAppointment && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white shadow-lg rounded-lg w-1/2 p-6">
+            <h2 className="text-2xl font-bold mb-4">Confirmar Cancelación</h2>
+            <p className="mb-4">¿Está seguro que desea cancelar el turno de {selectedAppointment.first_name} {selectedAppointment.last_name}?</p>
+            
+            <div className="flex justify-end space-x-4">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={() => setShowCancelModal(false)}
+              >
+                No, mantener turno
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded"
+                onClick={confirmCancelAppointment}
+              >
+                Sí, cancelar turno
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de información del usuario cancelado */}
+      {showUserModal && cancelUserInfo && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white shadow-lg rounded-lg w-1/2 p-6">
+            <h2 className="text-2xl font-bold mb-4">Información del Usuario</h2>
+            <div className="mb-4">
+              <p><strong>Email:</strong> {cancelUserInfo.email}</p>
+              <p><strong>Teléfono:</strong> {cancelUserInfo.phone}</p>
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
                 onClick={handleCloseModal}
               >
                 Cerrar

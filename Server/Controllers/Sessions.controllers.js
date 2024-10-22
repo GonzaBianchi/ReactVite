@@ -22,7 +22,7 @@ export default class SessionControllers {
     const result = validateUser(user)
 
     if (result.error) {
-      return res.status(400).json({ error: result.error.message })
+      return res.status(400).json({ error: result.error.issues })
     }
 
     const { username, password } = result.data

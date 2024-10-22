@@ -8,7 +8,7 @@ const userSchema = z.object({
   last_name: z.string({
     invalid_type_error: 'El apellido debe ser un string',
     required_error: 'El apellido es requerido'
-  }).min(1, 'El nombre no puede estar vacío'),
+  }).min(1, 'El apellido no puede estar vacío'),
   phone: z.number().int().positive().refine(value => value.toString().length >= 10, {
     message: 'El número de teléfono debe tener al menos 8 dígitos'
   }),

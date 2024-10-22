@@ -7,13 +7,16 @@ import { format, startOfToday } from 'date-fns';
 import axiosInstance from '../axioConfig.js';
 import { Toaster, toast } from 'sonner'
 
-// Fix Leaflet's default icon path issues
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Coordenadas iniciales centradas en Argentina (aproximadamente Buenos Aires)
+const INITIAL_CENTER = [-34.6037, -58.3816];
+const INITIAL_ZOOM = 12;
 
 // Custom hook to update map view
 // eslint-disable-next-line react/prop-types
@@ -42,8 +45,8 @@ const Appointments = ({ username }) => {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
-  const [mapCenter, setMapCenter] = useState([0, 0]);
-  const [mapZoom, setMapZoom] = useState(2);
+  const [mapCenter, setMapCenter] = useState(INITIAL_CENTER);
+  const [mapZoom, setMapZoom] = useState(INITIAL_ZOOM);
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
@@ -83,40 +86,74 @@ const Appointments = ({ username }) => {
 
   const geocodeAddress = async (address) => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+      // Agregar "Argentina" a la búsqueda si no está incluida
+      const searchAddress = address.toLowerCase().includes('argentina') 
+        ? address 
+        : `${address}, Argentina`;
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?` + 
+        new URLSearchParams({
+          q: searchAddress,
+          format: 'json',
+          countrycodes: 'ar', // Limitar búsqueda a Argentina
+          limit: 1,
+          addressdetails: 1
+        })
+      );
+
       const data = await response.json();
+
       if (data && data.length > 0) {
-        return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        // Verificar que la dirección está en Argentina
+        if (data[0].address.country_code === 'ar') {
+          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        } else {
+          toast.error('Por favor, ingrese una dirección válida en Argentina');
+          return null;
+        }
+      } else {
+        toast.error('Dirección no encontrada. Por favor, sea más específico');
+        return null;
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error('Error de geocodificación:', error);
+      toast.error('Error al buscar la dirección');
+      return null;
     }
-    return null;
   };
 
   const calculateRoute = useCallback(async () => {
-    if (!appointmentData.start_address || !appointmentData.end_address) return;
+    if (appointmentData.start_address === '' || appointmentData.end_address === '') return;
 
     const start = await geocodeAddress(appointmentData.start_address);
     const end = await geocodeAddress(appointmentData.end_address);
 
     if (start && end) {
       setMarkers([
-        { position: start, popup: 'Start' },
-        { position: end, popup: 'End' }
+        { position: start, popup: 'Inicio' },
+        { position: end, popup: 'Destino' }
       ]);
 
-      // Calculate center point
+      // Calcular punto central
       const centerLat = (start[0] + end[0]) / 2;
       const centerLng = (start[1] + end[1]) / 2;
       setMapCenter([centerLat, centerLng]);
-      setMapZoom(12);
 
-      // Calculate distance (this is a simple straight-line distance)
+      // Ajustar zoom basado en la distancia
+      const bounds = L.latLngBounds([start, end]);
+      const padding = 50; // padding en píxeles
+      const map = document.querySelector('.leaflet-container')?._leaflet_map;
+      if (map) {
+        const zoom = map.getBoundsZoom(bounds, false, [padding, padding]);
+        setMapZoom(Math.min(zoom, 15)); // limitar el zoom máximo a 15
+      }
+
+      // Calcular distancia
       const distanceInMeters = L.latLng(start).distanceTo(L.latLng(end));
       setDistance(distanceInMeters);
 
-      const durationInMinutes = Math.round(distanceInMeters / 833.33); // Assuming 50 km/h average speed
+      const durationInMinutes = Math.round(distanceInMeters / 833.33);
       const hours = Math.floor(durationInMinutes / 60);
       const minutes = durationInMinutes % 60;
       setDuration(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
@@ -258,7 +295,7 @@ const Appointments = ({ username }) => {
                   onChange={handleAddressChange}
                   required
                   className="mt-1 block w-full rounded-md border-gray-300"
-                  placeholder="Enter start address"
+                  placeholder="Calle número, provincia/localidad"
                 />
               </div>
               <div>
@@ -271,11 +308,15 @@ const Appointments = ({ username }) => {
                   onChange={handleAddressChange}
                   required
                   className="mt-1 block w-full rounded-md border-gray-300"
-                  placeholder="Enter end address"
+                  placeholder="Calle número, provincia/localidad"
                 />
               </div>
               <div style={{ height: '400px', width: '100%' }}>
-                <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
+                <MapContainer 
+                  center={INITIAL_CENTER} 
+                  zoom={INITIAL_ZOOM} 
+                  style={{ height: '100%', width: '100%' }}
+                >
                   <ChangeView center={mapCenter} zoom={mapZoom} />
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

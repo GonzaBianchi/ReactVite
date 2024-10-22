@@ -93,12 +93,27 @@ export default class AppointmentsControllers {
     try {
       const { id } = req.params
       const { id_van } = req.body
-      const result = await this.db.updateVanAppointment(id, id_van)
+
+      // Actualizar appointment y obtener van anterior
+      const { result, previousVanId } = await this.db.updateVanAppointment(id, id_van)
+
       if (result.affectedRows > 0) {
-        await this.vansDb.updateAvailableVan(id_van)
-        return res.status(200).json({ message: 'Turno actualizado correctamente', result })
+        // Si había una van anterior, marcarla como available
+        if (previousVanId) {
+          await this.vansDb.updateVanAvailability(previousVanId, true)
+        }
+
+        // Marcar la nueva van como unavailable
+        await this.vansDb.updateVanAvailability(id_van, false)
+
+        return res.status(200).json({
+          message: 'Turno actualizado correctamente',
+          result
+        })
       } else {
-        return res.status(404).json({ error: 'No se encontró el turno para actualizar' })
+        return res.status(404).json({
+          error: 'No se encontró el turno para actualizar'
+        })
       }
     } catch (error) {
       console.error('Error al actualizar el turno:', error)
@@ -118,6 +133,28 @@ export default class AppointmentsControllers {
     } catch (error) {
       console.error('Error al eliminar el turno:', error)
       res.status(500).json({ success: false, error: 'Error interno del servidor' })
+    }
+  }
+
+  deleteAppointmentAdmin = async (req, res) => {
+    try {
+      const appointmentId = req.params.id
+      const idUser = req.body.id_user
+
+      // Primero obtener la info del usuario
+      const userInfor = await this.usersDb.getUserInfo(idUser)
+
+      // Luego eliminar el appointment
+      await this.db.deleteAppointment(appointmentId)
+
+      // Devolver la info del usuario
+      res.status(200).json({
+        message: 'Turno cancelado exitosamente',
+        userInfo: userInfor
+      })
+    } catch (error) {
+      console.error('Error al cancelar el turno:', error)
+      res.status(500).json({ error: 'Error al cancelar el turno' })
     }
   }
 }
