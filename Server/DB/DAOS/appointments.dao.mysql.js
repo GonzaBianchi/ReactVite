@@ -101,7 +101,7 @@ export default class AppointmentsDaoMysql {
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
       LEFT JOIN vans v ON v.id = a.id_van
-      WHERE u.username = ? AND a.is_deleted = FALSE;`
+      WHERE u.username = ? AND a.is_deleted = FALSE AND a.day >= NOW();`
     try {
       return await this.db.query(query, [usernameP])
     } catch (error) {
@@ -149,6 +149,67 @@ export default class AppointmentsDaoMysql {
       }
     } catch (error) {
       console.error('Error updating appointment:', error)
+      throw error
+    }
+  }
+
+  async updateAppointment (appointmentId, updatedData) {
+    try {
+      const query = `UPDATE appointments 
+        SET day = ?, schedule = ?, start_address = ?, end_address = ?, 
+        duration = ?, cost = ?, stairs = ?, distance = ?, staff = ?, description = ?
+        WHERE id = ?`
+
+      const values = [
+        updatedData.day,
+        updatedData.schedule,
+        updatedData.start_address,
+        updatedData.end_address,
+        updatedData.duration,
+        updatedData.cost,
+        updatedData.stairs,
+        updatedData.distance,
+        updatedData.staff ? 1 : 0,
+        updatedData.description,
+        appointmentId
+      ]
+
+      const result = await this.db.query(query, values)
+      return result
+    } catch (error) {
+      console.error('Error updating appointment:', error)
+      throw error
+    }
+  }
+
+  async checkAppointmentEditEligibility (appointmentId, username) {
+    const query = `
+      SELECT day, schedule 
+      FROM appointments a
+      JOIN users u ON a.id_user = u.id
+      WHERE a.id = ? AND u.username = ? AND a.is_deleted = FALSE
+    `
+    try {
+      const [appointment] = await this.db.query(query, [appointmentId, username])
+
+      if (!appointment) {
+        return { eligible: false, reason: 'Turno no encontrado' }
+      }
+
+      const appointmentDateTime = new Date(`${appointment.day} ${appointment.schedule}`)
+      const now = new Date()
+      const hoursDifference = (appointmentDateTime - now) / (1000 * 60 * 60)
+
+      if (hoursDifference <= 48) {
+        return {
+          eligible: false,
+          reason: 'No es posible modificar el turno. Debe hacerse con al menos 48 horas de anticipación.'
+        }
+      }
+
+      return { eligible: true }
+    } catch (error) {
+      console.error('Error checking appointment eligibility:', error)
       throw error
     }
   }

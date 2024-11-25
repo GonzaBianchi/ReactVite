@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../axioConfig';
 
-// In useAuth.js
 export const useAuth = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [role, setRole] = useState('');
@@ -11,48 +10,42 @@ export const useAuth = () => {
   
     useEffect(() => {
         const verifyAuth = async () => {
-          try {
-            const hasAccessToken = document.cookie.includes('access_token');
-            const hasRefreshToken = document.cookie.includes('refresh_token');
-      
-            if (!hasAccessToken && hasRefreshToken) {
-              const refreshResponse = await axiosInstance.post('/session/refresh-token');
-              
-              if (refreshResponse.status === 200) {
-                const roleResponse = await axiosInstance.get('/session/role');
+            try {
+                // Intentar obtener el rol desde el backend
+                const response = await axiosInstance.get('/session/role');
+                
+                // Si la solicitud es exitosa, establecer autenticación
                 setIsAuthenticated(true);
-                setRole(roleResponse.data.role);
-                setUsername(roleResponse.data.username);
-              }
-            } else if (hasAccessToken) {
-              const response = await axiosInstance.get('/session/role');
-              setIsAuthenticated(true);
-              setRole(response.data.role);
-              setUsername(response.data.username);
-            } else {
-              setIsAuthenticated(false);
+                setRole(response.data.role);
+                setUsername(response.data.username);
+            } catch (error) {
+                // Si falla, significa que no hay autenticación válida
+                setIsAuthenticated(false);
+                setRole('');
+                setUsername('');
+                
+                // Si hay un error específico de autenticación
+                if (error.response && error.response.status === 401) {
+                    // Token no proporcionado o inválido
+                    setAuthError('No autorizado');
+                }
+            } finally {
+                // Finalizar la carga independientemente del resultado
+                setIsLoading(false);
             }
-          } catch (error) {
-            setIsAuthenticated(false);
-            setRole('');
-            setUsername('');
-            setAuthError(error.response?.data?.message || 'Authentication failed');
-          } finally {
-            setIsLoading(false);
-          }
         };
       
         verifyAuth();
-      }, []);
+    }, []);
   
     return { 
-      isAuthenticated, 
-      role, 
-      username, 
-      isLoading, 
-      authError, 
-      setIsAuthenticated, 
-      setRole, 
-      setUsername 
+        isAuthenticated, 
+        role, 
+        username, 
+        isLoading, 
+        authError, 
+        setIsAuthenticated, 
+        setRole, 
+        setUsername 
     };
-  };
+};

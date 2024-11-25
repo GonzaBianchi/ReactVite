@@ -6,7 +6,10 @@ const appointmentSchema = z.object({
   }).min(1, 'La dirección inicial no puede estar vacía'),
   end_address: z.string({
     required_error: 'La dirección destino es requerida'
-  }).min(1, 'La dirección destino no puede estar vacía')
+  }).min(1, 'La dirección destino no puede estar vacía'),
+  description: z.string({
+    required_error: 'La descripción es requerida'
+  }).min(1, 'La descripción no puede estar vacía')
 })
 
 export function validateAppointment (object) {

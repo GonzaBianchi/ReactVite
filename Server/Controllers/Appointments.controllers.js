@@ -121,6 +121,52 @@ export default class AppointmentsControllers {
     }
   }
 
+  updateAppointment = async (req, res) => {
+    try {
+      const { id } = req.params
+      const user = req.user
+
+      if (!user) {
+        return res.status(401).json({ error: 'Usuario no autenticado' })
+      }
+
+      // Validar los datos de entrada usando el mismo esquema de Zod
+      const validationResult = validateAppointment(req.body)
+      if (!validationResult.success) {
+        return res.status(400).json({ error: 'Datos de dirección inválidos', details: validationResult.error.errors })
+      }
+
+      // Verificar elegibilidad para editar el turno
+      const eligibilityCheck = await this.db.checkAppointmentEditEligibility(id, user.username)
+
+      if (!eligibilityCheck.eligible) {
+        return res.status(400).json({ error: eligibilityCheck.reason })
+      }
+
+      // Ajustar el formato de duración
+      const duration = req.body.duration + ':00'
+
+      const updatedAppointment = {
+        ...req.body,
+        duration
+      }
+
+      const result = await this.db.updateAppointment(id, updatedAppointment)
+
+      if (result.affectedRows > 0) {
+        res.status(200).json({
+          message: 'Turno actualizado exitosamente',
+          result
+        })
+      } else {
+        res.status(404).json({ error: 'Turno no encontrado' })
+      }
+    } catch (error) {
+      console.error('Error al actualizar el turno:', error)
+      res.status(500).json({ error: 'Error interno del servidor' })
+    }
+  }
+
   deleteAppointment = async (req, res) => {
     try {
       const appointmentId = req.params.id

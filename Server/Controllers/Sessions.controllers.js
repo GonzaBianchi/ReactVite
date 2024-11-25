@@ -116,16 +116,86 @@ export default class SessionControllers {
   }
 
   getRole = async (req, res) => {
-    const token = req.cookies.access_token
-    if (!token) {
+    const accessToken = req.cookies.access_token
+    const refreshToken = req.cookies.refresh_token
+
+    // Si no hay access token pero sí refresh token, intentar refrescar
+    if (!accessToken && refreshToken) {
+      try {
+        // Verificar la validez del refresh token
+        const userData = jwt.verify(refreshToken, process.env.JWT_REFESH_SECETKEY)
+
+        // Generar un nuevo access token
+        const newAccessToken = this.generateAccessToken({
+          username: userData.username,
+          id: userData.id,
+          role: userData.role
+        })
+
+        // Establecer el nuevo access token en las cookies
+        res.cookie('access_token', newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 3600000 // 1 hora
+        })
+
+        // Devolver la información del rol
+        return res.status(200).json({
+          role: userData.role,
+          username: userData.username
+        })
+      } catch (refreshError) {
+        // Si el refresh token también es inválido
+        return this.autoLogout(res)
+      }
+    }
+
+    // Si hay access token, verificarlo normalmente
+    if (!accessToken) {
       return res.status(401).json({ message: 'Token no proporcionado' })
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRETKEY)
-      return res.status(200).json({ role: decoded.role, username: decoded.username })
+      // Verificar el access token
+      const decoded = jwt.verify(accessToken, process.env.JWT_SECRETKEY)
+      return res.status(200).json({
+        role: decoded.role,
+        username: decoded.username
+      })
     } catch (err) {
-      return res.status(403).json({ message: 'Token no válido' })
+      // Si el access token está expirado pero existe un refresh token
+      if (refreshToken) {
+        try {
+          // Verificar el refresh token
+          const userData = jwt.verify(refreshToken, process.env.JWT_REFESH_SECETKEY)
+
+          // Generar un nuevo access token
+          const newAccessToken = this.generateAccessToken({
+            username: userData.username,
+            id: userData.id,
+            role: userData.role
+          })
+
+          // Establecer el nuevo access token en las cookies
+          res.cookie('access_token', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000 // 1 hora
+          })
+
+          // Devolver la información del rol
+          return res.status(200).json({
+            role: userData.role,
+            username: userData.username
+          })
+        } catch (refreshError) {
+          // Si el refresh token también es inválido
+          return this.autoLogout(res)
+        }
+      }
+
+      // Si no hay refresh token o es inválido
+      return this.autoLogout(res)
     }
   }
 

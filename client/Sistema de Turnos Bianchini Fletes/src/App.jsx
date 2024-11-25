@@ -1,7 +1,5 @@
 import './App.css'
-// import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-// import axiosInstance from './axioConfig';
 import { useAuth } from './auth/useAuth';
 
 import Home from './pages/Home';
@@ -15,13 +13,6 @@ import AdminPanel from './pages/AdminPanel';
 import AdminAppointments from './pages/AdminAppointments';
 
 function App() {
-  // const [isAuthenticated, setIsAuthenticated] = useState(() => {
-  //   const storedAuth = localStorage.getItem('isAuthenticated');
-  //   return storedAuth === 'true';
-  // });
-
-  // const [role, setRole] = useState('');
-  // const [username, setUsernameSession] = useState('');
   const { 
     isAuthenticated, 
     role, 
@@ -31,19 +22,10 @@ function App() {
     setRole, 
     setUsername 
   } = useAuth();
-  // useEffect(() => {
-  //   localStorage.setItem('isAuthenticated', isAuthenticated);
-  //   if (isAuthenticated) {
-  //     axiosInstance.get('/session/role').then((response) => {
-  //       setRole(response.data.role);
-  //       setUsernameSession(response.data.username);
-  //     });
-  //   }
-  // }, [isAuthenticated]);
   
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or a loading spinner
+    return <div>Loading...</div>;
   }
 
   return (
