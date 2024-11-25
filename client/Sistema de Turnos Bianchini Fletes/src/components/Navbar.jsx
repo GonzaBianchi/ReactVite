@@ -1,24 +1,31 @@
+/* eslint-disable react/prop-types */
 import { Link, useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import axiosInstance from '../axioConfig'
 import logo from '../assets/logo.webp';
 
-// eslint-disable-next-line react/prop-types
-const Navbar = ({ isAuthenticated, role, setIsAuthenticated }) => {
-  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await axiosInstance.post('/session/logout'); // Hacer una solicitud para cerrar sesión
-      Cookies.remove('access_token'); // Eliminar la cookie de acceso
-      Cookies.remove('refresh_token'); // Eliminar el refresh token si es necesario
-      setIsAuthenticated(false); // Actualizar el estado de autenticación
-      localStorage.setItem('isAuthenticated', 'false');
-      navigate('/');
-    } catch (error) {
-      console.error('Error al cerrar sesión', error);
-    }
-  };
+const Navbar = ({ 
+    isAuthenticated, 
+    role, 
+    setIsAuthenticated, 
+    setRole, 
+    setUsername 
+  }) => {
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+      try {
+        await axiosInstance.post('/session/logout');
+        
+        setIsAuthenticated(false);
+        setRole('');
+        setUsername('');
+        
+        navigate('/');
+      } catch (error) {
+        console.error('Error al cerrar sesión', error);
+      }
+    };
 
   return (
     <nav className="bg-gray-800 p-4 text-white">

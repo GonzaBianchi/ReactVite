@@ -121,7 +121,7 @@ const AdminAppointments = () => {
 
   const confirmCancelAppointment = async () => {
     try {
-      const response = await axiosInstance.delete(`appointment/admin/${selectedAppointment.id}`, {
+      const response = await axiosInstance.put(`appointment/admin/${selectedAppointment.id}`, {
         data: { id_user: selectedAppointment.id_user }
       });
       

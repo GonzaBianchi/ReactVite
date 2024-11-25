@@ -24,6 +24,7 @@ export default class AppointmentsDaoMysql {
           distance INT NOT NULL,
           staff BOOLEAN NOT NULL,
           description TEXT NOT NULL,
+          is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
           FOREIGN KEY (id_van) REFERENCES vans(id) ON UPDATE CASCADE ON DELETE CASCADE,
           FOREIGN KEY (id_user) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
           FOREIGN KEY (id_state) REFERENCES states(id) ON UPDATE CASCADE
@@ -82,7 +83,7 @@ export default class AppointmentsDaoMysql {
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
       LEFT JOIN vans v ON v.id = a.id_van
-      WHERE a.day = ?
+      WHERE a.day = ? AND a.is_deleted = FALSE
       ORDER BY a.schedule ASC;`
     try {
       const rows = await this.db.query(query, [aDay])
@@ -100,7 +101,7 @@ export default class AppointmentsDaoMysql {
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
       LEFT JOIN vans v ON v.id = a.id_van
-      WHERE u.username = ?;`
+      WHERE u.username = ? AND a.is_deleted = FALSE;`
     try {
       return await this.db.query(query, [usernameP])
     } catch (error) {
@@ -115,7 +116,7 @@ export default class AppointmentsDaoMysql {
       const query = `
         SELECT schedule, COUNT(*) as total 
         FROM ${this.table} 
-        WHERE day = ? AND schedule IN (${placeholders})
+        WHERE day = ? AND schedule IN (${placeholders}) AND is_deleted = FALSE
         GROUP BY schedule
       `
       const params = [day, ...timeSlots]
@@ -154,7 +155,7 @@ export default class AppointmentsDaoMysql {
 
   async deleteAppointment (idAppointment) {
     try {
-      const query = 'DELETE FROM appointments WHERE id = ?'
+      const query = 'UPDATE appointments SET is_deleted = TRUE WHERE id = ?'
       const result = await this.db.query(query, [idAppointment])
       return result
     } catch (error) {

@@ -4,8 +4,8 @@ import axiosInstance from '../axioConfig'
 import { Toaster, toast } from 'sonner'
 
 // eslint-disable-next-line react/prop-types
-const Login = ({ setIsAuthenticated,  setRole, setUsernameSession }) => {
-  const [username, setUsername] = useState('');
+const Login = ({ setIsAuthenticated, setRole, setUsername }) => {
+  const [username, setUsernameSession] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
@@ -19,17 +19,15 @@ const Login = ({ setIsAuthenticated,  setRole, setUsernameSession }) => {
       });
 
       if (response.status === 200) {
-        setIsAuthenticated(true); // Actualiza el estado de autenticación
-        localStorage.setItem('isAuthenticated', 'true');
-
+        setIsAuthenticated(true);
         const { role, username } = response.data;
         setRole(role);
-        setUsernameSession(username);
-        navigate('/'); // Navega al perfil si el login es exitoso
+        setUsername(username);
+        navigate('/');
       }
     } catch (error) {
       console.error('Error en el inicio de sesión', error);
-      toast.error(error.response.data.error);
+      toast.error(error.response?.data?.error || 'Error de inicio de sesión');
     }
   };
 
@@ -44,7 +42,7 @@ const Login = ({ setIsAuthenticated,  setRole, setUsernameSession }) => {
             type="text" 
             id="username" 
             value={username} 
-            onChange={(e) => setUsername(e.target.value)} 
+            onChange={(e) => setUsernameSession(e.target.value)} 
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
         </div>

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { randomUUID } from 'crypto'
 import UsersDaoMysql from '../DB/DAOS/users.dao.mysql.js'
-import { validateUser, validateUserLogin } from '../Schemas/UserSchema.js'
+import { validateUser } from '../Schemas/UserSchema.js'
 import { ROLES } from '../Config/config.js'
 import UsersHelpers from '../Helpers/User.helper.js'
 import dotenv from 'dotenv'
@@ -53,15 +53,15 @@ export default class SessionControllers {
   }
 
   login = async (req, res) => {
-    const result = validateUserLogin(req.body)
+    // const result = validateUserLogin(req.body)
 
-    console.log(result)
+    // console.log(result)
 
-    if (result.error) {
-      return res.status(400).json({ error: result.error.issues })
-    }
+    // if (result.error) {
+    //   return res.status(400).json({ error: result.error.issues })
+    // }
 
-    const { username, password } = result.data
+    const { username, password } = req.body
     console.log(username, password, process.env.ADMIN_USER, process.env.ADMIN_PW)
     try {
       if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PW) {
@@ -89,7 +89,7 @@ export default class SessionControllers {
       if (!user) return res.status(400).json({ error: 'El usuario no existe' })
 
       const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) return res.status(400).json({ error: 'Contraseña invalida, intente nuevamente' })
+      if (!isValid) return res.status(400).json({ error: 'Contraseña o usuario incorrecto, intente nuevamente' })
 
       const token = this.generateAccessToken({ username: user.username, id: user.id, role: ROLES.USER })
       const refreshToken = this.generateRefreshToken({ username: user.username, id: user.id, role: ROLES.USER })

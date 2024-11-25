@@ -18,8 +18,8 @@ export default class AppointmentsRoutes extends Routes {
       .get('/user/:username', passport.authenticate('jwt', { session: false }), this.controller.getAppointmentsByUser)
       .get('/available-times/:day', passport.authenticate('jwt', { session: false }), this.controller.getAvailableTimes)
       .put('/:id', passport.authenticate('jwt', { session: false }), this.controller.updateVanAppointment)
-      .delete('/user/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteAppointment)
-      .delete('/admin/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteAppointmentAdmin)
+      .put('/user/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteAppointment)
+      .put('/admin/:id', passport.authenticate('jwt', { session: false }), this.controller.deleteAppointmentAdmin)
     return this.router
   }
 }

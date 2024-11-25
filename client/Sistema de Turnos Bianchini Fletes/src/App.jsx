@@ -1,10 +1,8 @@
-// import React from 'react'
 import './App.css'
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import axiosInstance from './axioConfig'; // Importa la instancia de Axios
-// import Cookies from 'js-cookie'; borrar estas dos dependencias
-// import { jwtDecode } from 'jwt-decode'
+// import axiosInstance from './axioConfig';
+import { useAuth } from './auth/useAuth';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -17,32 +15,50 @@ import AdminPanel from './pages/AdminPanel';
 import AdminAppointments from './pages/AdminAppointments';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Al cargar la aplicación, revisa si hay un valor de autenticación guardado en localStorage
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    return storedAuth === 'true'; // Si existe, lo convierte en booleano
-  });
+  // const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  //   const storedAuth = localStorage.getItem('isAuthenticated');
+  //   return storedAuth === 'true';
+  // });
 
-  const [role, setRole] = useState('');
-  const [username, setUsernameSession] = useState('');
-
-  useEffect(() => {
-    // Si el valor de `isAuthenticated` cambia, actualiza el `localStorage`
-    localStorage.setItem('isAuthenticated', isAuthenticated);
-    if (isAuthenticated) {
-      axiosInstance.get('/session/role').then((response) => {
-        setRole(response.data.role);
-        setUsernameSession(response.data.username);
-      });
-    }
-  }, [isAuthenticated]);
+  // const [role, setRole] = useState('');
+  // const [username, setUsernameSession] = useState('');
+  const { 
+    isAuthenticated, 
+    role, 
+    username, 
+    isLoading, 
+    setIsAuthenticated, 
+    setRole, 
+    setUsername 
+  } = useAuth();
+  // useEffect(() => {
+  //   localStorage.setItem('isAuthenticated', isAuthenticated);
+  //   if (isAuthenticated) {
+  //     axiosInstance.get('/session/role').then((response) => {
+  //       setRole(response.data.role);
+  //       setUsernameSession(response.data.username);
+  //     });
+  //   }
+  // }, [isAuthenticated]);
   
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a loading spinner
+  }
+
   return (
     <Router>
-      <Navbar isAuthenticated={isAuthenticated} role={role} setIsAuthenticated={setIsAuthenticated} />
+      <Navbar 
+        isAuthenticated={isAuthenticated} 
+        role={role} 
+        setIsAuthenticated={setIsAuthenticated}
+        setRole={setRole}
+        setUsername={setUsername}
+      />
+
       <Routes>
         <Route path="/" element={<Home isAuthenticated={isAuthenticated} role={role} />} />
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated}  setRole={setRole} setUsernameSession={setUsernameSession} />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated}  setRole={setRole} setUsername={setUsername} />} />
         <Route path="/register" element={isAuthenticated ? <Navigate to="/"/> : <Register />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/"/> } />
         <Route path="/turnero" element={isAuthenticated ? <Appointments username={username} /> : <Navigate to="/login" />} />

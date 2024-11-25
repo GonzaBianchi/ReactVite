@@ -72,7 +72,7 @@ const MisTurnos = ({ username }) => {
       return;
     }
     try {
-      const response = await axiosInstance.delete(`/appointment/user/${id}`);
+      const response = await axiosInstance.put(`/appointment/user/${id}`);
       if (response.status === 200) {
         setAppointments(prevAppointments => prevAppointments.filter(a => a.id !== id));
         toast.success('Turno eliminado exitosamente');
