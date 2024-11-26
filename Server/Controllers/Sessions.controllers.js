@@ -118,7 +118,7 @@ export default class SessionControllers {
   getRole = async (req, res) => {
     const accessToken = req.cookies.access_token
     const refreshToken = req.cookies.refresh_token
-
+    console.log('entrando a getRole')
     // Si no hay access token pero sí refresh token, intentar refrescar
     if (!accessToken && refreshToken) {
       try {

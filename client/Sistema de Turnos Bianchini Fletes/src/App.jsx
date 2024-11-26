@@ -17,6 +17,7 @@ function App() {
     isAuthenticated, 
     role, 
     username, 
+    // eslint-disable-next-line no-unused-vars
     isLoading, 
     setIsAuthenticated, 
     setRole, 
@@ -24,9 +25,9 @@ function App() {
   } = useAuth();
   
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <Router>

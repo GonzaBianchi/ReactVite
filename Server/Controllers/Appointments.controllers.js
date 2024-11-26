@@ -130,6 +130,7 @@ export default class AppointmentsControllers {
         return res.status(401).json({ error: 'Usuario no autenticado' })
       }
 
+      console.log('Datos del formulario:', req.body)
       // Validar los datos de entrada usando el mismo esquema de Zod
       const validationResult = validateAppointment(req.body)
       if (!validationResult.success) {

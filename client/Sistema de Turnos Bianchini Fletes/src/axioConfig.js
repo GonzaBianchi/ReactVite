@@ -14,7 +14,7 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401) {
       console.log('Error de autenticación: ', error.response.data);
       // Por ejemplo, redirigir al login si la sesión ha expirado
-      window.location.href = '/';
+      // window.location.href = '/';
     }
     console.log(error)
     return Promise.reject(error)
