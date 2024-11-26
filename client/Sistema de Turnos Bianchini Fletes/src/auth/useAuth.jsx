@@ -19,15 +19,21 @@ export const useAuth = () => {
                 setRole(response.data.role);
                 setUsername(response.data.username);
             } catch (error) {
-                // Si falla, significa que no hay autenticación válida
-                setIsAuthenticated(false);
-                setRole('');
-                setUsername('');
-                
-                // Si hay un error específico de autenticación
-                if (error.response && error.response.status === 401) {
-                    // Token no proporcionado o inválido
-                    setAuthError('No autorizado');
+                // Si falla, intentar refrescar el token
+                console.log('Error de autenticación:', error);
+                try {
+                    await axiosInstance.post('/session/refresh-token');
+                    // Si el refresh token es válido, volver a intentar obtener el rol
+                    const refreshResponse = await axiosInstance.get('/session/role');
+                    setIsAuthenticated(true);
+                    setRole(refreshResponse.data.role);
+                    setUsername(refreshResponse.data.username);
+                } catch (refreshError) {
+                    // Si el refresh token también falla
+                    setIsAuthenticated(false);
+                    setRole('');
+                    setUsername('');
+                    setAuthError('Sesión expirada', refreshError);
                 }
             } finally {
                 // Finalizar la carga independientemente del resultado

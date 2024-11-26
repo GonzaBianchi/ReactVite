@@ -1,4 +1,3 @@
-// src/axiosConfig.js
 import axios from 'axios'
 
 const axiosInstance = axios.create({
@@ -6,18 +5,42 @@ const axiosInstance = axios.create({
   withCredentials: true,
 })
 
+// Variable para evitar llamadas recursivas
+let isRefreshing = false;
+
 // Interceptor de respuesta para manejar errores globalmente
 axiosInstance.interceptors.response.use(
   response => response,
-  error => {
-    // Manejar errores de autenticación o cualquier otro tipo de error
-    if (error.response.status === 401) {
-      console.log('Error de autenticación: ', error.response.data);
-      // Por ejemplo, redirigir al login si la sesión ha expirado
-      // window.location.href = '/';
+  async error => {
+    const originalRequest = error.config;
+
+    // Verificar si es un error 401 y no es un reintento
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Prevenir múltiples intentos de refresh
+      if (isRefreshing) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Intentar refrescar el token
+        await axiosInstance.post('/session/refresh-token');
+        
+        // Reintentar la solicitud original
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        // Si el refresh falla, redirigir al login
+        isRefreshing = false;
+        window.location.href = '/';
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
-    console.log(error)
-    return Promise.reject(error)
+
+    return Promise.reject(error);
   }
 )
 
