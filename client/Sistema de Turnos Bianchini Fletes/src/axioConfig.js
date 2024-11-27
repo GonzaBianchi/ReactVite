@@ -5,43 +5,59 @@ const axiosInstance = axios.create({
   withCredentials: true,
 })
 
-// Variable para evitar llamadas recursivas
 let isRefreshing = false;
+let failedQueue = [];
 
-// Interceptor de respuesta para manejar errores globalmente
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 axiosInstance.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
 
-    // Verificar si es un error 401 y no es un reintento
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Prevenir múltiples intentos de refresh
       if (isRefreshing) {
-        return Promise.reject(error);
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return axiosInstance(originalRequest);
+        }).catch(err => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        // Intentar refrescar el token
-        await axiosInstance.post('/session/refresh-token');
-        
-        // Reintentar la solicitud original
+        const { data } = await axiosInstance.post('/session/refresh-token');
+        const newToken = data.accessToken; // Asume que el servidor devuelve el nuevo token
+        isRefreshing = false;
+        processQueue(null, newToken);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Si el refresh falla, redirigir al login
+        processQueue(refreshError, null);
         isRefreshing = false;
-        window.location.href = '/';
+        // Redirigir al login solo si no estamos ya en la página de login
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 
     return Promise.reject(error);
   }
-)
+);
 
 export default axiosInstance
+
