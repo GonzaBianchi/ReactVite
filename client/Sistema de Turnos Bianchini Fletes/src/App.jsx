@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { useAuth } from './auth/useAuth';
 import { Toaster } from 'sonner';
 import axiosInstance from './axioConfig.js';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -27,7 +28,7 @@ function App() {
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900 dark:border-gray-100"></div>
     </div>;
   }
 
@@ -44,30 +45,31 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Toaster position="bottom-right" closeButton richColors />
-        <Navbar 
-          isAuthenticated={isAuthenticated} 
-          role={role}
-          handleLogout={handleLogout}
-        />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home isAuthenticated={isAuthenticated} role={role} username={username} />} />
-            <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated} setRole={setRole} setUsername={setUsername} />} />
-            <Route path="/register" element={isAuthenticated ? <Navigate to="/"/> : <Register />} />
-            <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login"/>} />
-            <Route path="/turnero" element={isAuthenticated ? <Appointments username={username} /> : <Navigate to="/login" />} />
-            <Route path="/mis-turnos" element={isAuthenticated ? <MyAppointments username={username} /> : <Navigate to="/login" />} />
-            <Route path="/panel-admin" element={isAuthenticated && role === 'admin' ? <AdminPanel /> : <Navigate to="/login" />} />
-            <Route path="/panel-admin-turnos" element={isAuthenticated && role === 'admin' ? <AdminAppointments /> : <Navigate to="/login" />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+          <Toaster position="bottom-right" closeButton richColors />
+          <Navbar 
+            isAuthenticated={isAuthenticated} 
+            role={role}
+            handleLogout={handleLogout}
+          />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home isAuthenticated={isAuthenticated} role={role} username={username} />} />
+              <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated} setRole={setRole} setUsername={setUsername} />} />
+              <Route path="/register" element={isAuthenticated ? <Navigate to="/"/> : <Register />} />
+              <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login"/>} />
+              <Route path="/turnero" element={isAuthenticated ? <Appointments username={username} /> : <Navigate to="/login" />} />
+              <Route path="/mis-turnos" element={isAuthenticated ? <MyAppointments username={username} /> : <Navigate to="/login" />} />
+              <Route path="/panel-admin" element={isAuthenticated && role === 'admin' ? <AdminPanel /> : <Navigate to="/login" />} />
+              <Route path="/panel-admin-turnos" element={isAuthenticated && role === 'admin' ? <AdminAppointments /> : <Navigate to="/login" />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 
 export default App;
-

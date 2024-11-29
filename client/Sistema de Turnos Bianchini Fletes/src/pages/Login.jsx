@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../axioConfig'
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
 
+// eslint-disable-next-line react/prop-types
 const Login = ({ setIsAuthenticated, setRole, setUsername }) => {
   const [username, setUsernameSession] = useState('');
   const [password, setPassword] = useState('');
@@ -49,12 +49,14 @@ const Login = ({ setIsAuthenticated, setRole, setUsername }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <Toaster position="bottom-right" closeButton richColors />
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Iniciar Sesión</CardTitle>
-          <CardDescription>Ingresa tus credenciales para acceder a tu cuenta</CardDescription>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Iniciar Sesión</CardTitle>
+          <CardDescription className="text-center">
+            Ingresa tus credenciales para acceder a tu cuenta
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -83,25 +85,29 @@ const Login = ({ setIsAuthenticated, setRole, setUsername }) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
+                    <EyeOffIcon className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <EyeIcon className="h-5 w-5" />
+                    <EyeIcon className="h-5 w-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             ¿No tienes una cuenta?{" "}
-            <a href="/register" className="text-blue-600 hover:underline">
+            <a href="/register" className="text-primary hover:underline">
               Regístrate aquí
             </a>
           </p>
@@ -112,4 +118,3 @@ const Login = ({ setIsAuthenticated, setRole, setUsername }) => {
 };
 
 export default Login;
-
