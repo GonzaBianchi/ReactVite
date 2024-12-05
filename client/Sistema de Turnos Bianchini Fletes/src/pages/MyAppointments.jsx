@@ -1,10 +1,12 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
 import axiosInstance from '../axioConfig.js';
 import EditAppointmentModal from '../components/EditAppointmentModal.jsx';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
+// eslint-disable-next-line react/prop-types
 const MyAppointments = ({ username }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,65 +111,64 @@ const MyAppointments = ({ username }) => {
   };
 
   if (loading) {
-    return <p className="text-center text-gray-500">Loading...</p>;
+    return <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>;
   }
 
   if (error) {
-    return <p className="text-center text-red-500">{error}</p>;
+    return <p className="text-center text-red-500 dark:text-red-400">{error}</p>;
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 dark:bg-gray-900">
       <Toaster position="bottom-right" closeButton richColors />
-      <h1 className="text-2xl font-bold mb-4">Turnos de {user}</h1>
+      <h1 className="text-2xl font-bold mb-4 dark:text-white">Turnos de {user}</h1>
 
       {message ? (
-        <p className="text-center text-gray-500">{message}</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">{message}</p>
       ) : appointments.length === 0 ? (
-        <p className="text-center text-gray-500">No tienes turnos reservados</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">No tienes turnos reservados</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full table-auto bg-white shadow-md rounded-lg">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-center text-gray-700">Fecha</th>
-                <th className="px-4 py-2 text-center text-gray-700">Hora</th>
-                <th className="px-4 py-2 text-center text-gray-700">Costo estimado</th>
-                <th className="px-4 py-2 text-center text-gray-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-center">Fecha</TableHead>
+                <TableHead className="text-center">Hora</TableHead>
+                <TableHead className="text-center">Costo estimado</TableHead>
+                <TableHead className="text-center">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {appointments.map((appointment) => (
-                <tr key={appointment.id} className="border-b border-gray-200">
-                  <td className="px-4 py-2 text-center">
+                <TableRow key={appointment.id}>
+                  <TableCell className="text-center">
                     {new Date(appointment.day).toLocaleDateString()}
-                  </td>
-                  <td className="p-2 text-center">
+                  </TableCell>
+                  <TableCell className="text-center">
                     {appointment.schedule.split(':').slice(0, 2).join(':')}
-                  </td>
-                  <td className="px-4 py-2 text-center">{appointment.cost}</td>
-                  <td className="px-4 py-2 text-center">
+                  </TableCell>
+                  <TableCell className="text-center">{appointment.cost}</TableCell>
+                  <TableCell className="text-center">
                     <div className="flex space-x-2 justify-center">
                     {canEditAppointment(appointment.day) && (
-                      <button
+                      <Button
                         onClick={() => handleEditAppointment(appointment)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded w-fit"
                       >
                         Editar
-                      </button>
+                      </Button>
                     )}
-                      <button
+                      <Button
                         onClick={() => handleDeleteAppointment(appointment.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded w-fit"
+                        variant="destructive"
                       >
                         Cancelar turno
-                      </button>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
       {selectedAppointment && (

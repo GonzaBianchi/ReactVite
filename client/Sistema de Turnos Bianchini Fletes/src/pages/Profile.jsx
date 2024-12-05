@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../axioConfig.js';
 import { Toaster, toast } from 'sonner';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -21,7 +27,6 @@ const Profile = () => {
     try {
       const response = await axiosInstance.get('/user/profile');
       setUser(response.data);
-      console.log(user)
       setFormData({
         first_name: response.data.first_name,
         last_name: response.data.last_name,
@@ -42,7 +47,6 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const handleInputChange = (e) => {
@@ -91,146 +95,170 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <div>Cargando perfil...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
   }
 
   if (!user) {
-    return <div>No se encontró información del usuario</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <p className="text-foreground">No se encontró información del usuario</p>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto mt-10 flex flex-col items-center">
-      <Toaster position="bottom-right" closeButton richColors />
-      <h1 className="text-3xl font-bold mb-6">
-        Bienvenido a tu perfil, {user.username}
-      </h1>
-      <div className="flex flex-col space-y-4 mb-6">
-        <p><strong>Nombre:</strong> {user.first_name}</p>
-        <p><strong>Apellido:</strong> {user.last_name}</p>
-        <p><strong>Teléfono:</strong> {user.phone}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-      </div>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        Actualizar Perfil
-      </button>
+    <div className="min-h-screen bg-background text-foreground p-8">
+      <div className="container max-w-2xl mx-auto space-y-8">
+        <Toaster position="bottom-right" closeButton richColors />
+        
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Bienvenido a tu perfil, {user.username}
+          </h1>
+          <p className="text-muted-foreground">
+            Gestiona tu información personal y preferencias de cuenta
+          </p>
+        </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-[500px]">
-            <h2 className="text-2xl font-bold mb-4">Actualizar Perfil</h2>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex justify-between">
-                <div>
-                  <label htmlFor="first_name" className="block mb-1">Nombre</label>
-                  <input
-                    type="text"
+        <Separator />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Información del perfil</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Nombre</div>
+                <div className="text-foreground">{user.first_name}</div>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Apellido</div>
+                <div className="text-foreground">{user.last_name}</div>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Teléfono</div>
+              <div className="text-foreground">{user.phone}</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Email</div>
+              <div className="text-foreground">{user.email}</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button>Actualizar Perfil</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] text-secondary-foreground dark:text-primary">
+            <DialogHeader>
+              <DialogTitle>Actualizar Perfil</DialogTitle>
+              <DialogDescription>
+                Actualice su información personal aquí. Haga clic en guardar cuando termine.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-6 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">Nombre</Label>
+                  <Input
                     id="first_name"
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
                     required
                   />
                 </div>
-                <div>
-                  <label htmlFor="last_name" className="block mb-1">Apellido</label>
-                  <input
-                    type="text"
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Apellido</Label>
+                  <Input
                     id="last_name"
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
                     required
                   />
                 </div>
               </div>
-              <div>
-                <label htmlFor="phone" className="block mb-1">Teléfono</label>
-                <input
-                  type="tel"
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
                   id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="email" className="block mb-1">Email</label>
-                <input
-                  type="email"
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
                   id="email"
                   name="email"
+                  type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="username" className="block mb-1">Nombre de usuario</label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <Label htmlFor="username">Nombre de usuario</Label>
+                <Input
                   id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="password" className="block mb-1">Nueva Contraseña (opcional)</label>
-                <input
-                  type="password"
+              <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="password">Nueva Contraseña (opcional)</Label>
+                <Input
                   id="password"
                   name="password"
+                  type="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                 />
               </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block mb-1">Confirmar Nueva Contraseña</label>
-                <input
-                  type="password"
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Nueva Contraseña</Label>
+                <Input
                   id="confirmPassword"
                   name="confirmPassword"
+                  type="password"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
-                >
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Actualizar
-                </button>
-              </div>
+                </Button>
+                <Button type="submit">Actualizar</Button>
+              </DialogFooter>
             </form>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
 
 export default Profile;
+

@@ -54,7 +54,7 @@ function App() {
             role={role}
             handleLogout={handleLogout}
           />
-          <main className="flex-grow">
+          <main className="flex-grow mt-1">
             <Routes>
               <Route path="/" element={<Home isAuthenticated={isAuthenticated} role={role} username={username} />} />
               <Route path="/login" element={isAuthenticated ? <Navigate to="/"/> : <Login setIsAuthenticated={setIsAuthenticated} setRole={setRole} setUsername={setUsername} />} />

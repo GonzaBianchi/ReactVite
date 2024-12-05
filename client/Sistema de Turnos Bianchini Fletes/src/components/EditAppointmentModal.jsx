@@ -5,6 +5,7 @@ import { GoogleMap, useJsApiLoader, DirectionsRenderer } from '@react-google-map
 import { toast } from 'sonner';
 import axiosInstance from '../axioConfig.js';
 import { format, parseISO, addHours, isAfter } from 'date-fns';
+import { Button } from "@/components/ui/button"
 const INITIAL_CENTER = { lat: -34.6037, lng: -58.3816 };
 const INITIAL_ZOOM = 12;
 const libraries = ['places', 'directions'];
@@ -285,19 +286,19 @@ const EditAppointmentModal = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">Editar Turno</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-80 flex justify-center items-center z-50">
+      <div className="bg-white dark:bg-background p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto border border-white">
+        <h2 className="text-2xl font-bold mb-4 dark:text-primary">Editar Turno</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-2">Fecha</label>
+            <label className="block mb-2 dark:text-primary">Fecha</label>
             <input 
               type="date" 
               name="day"
               value={formData.day ? new Date(formData.day).toISOString().split("T")[0] : ""}
               onChange={handleChange}
               required 
-              className={`w-full p-2 border rounded ${validationErrors.day ? 'border-red-500' : ''}`}
+              className={`dark:bg-background dark:border-input w-full p-2 border rounded ${validationErrors.day ? 'border-red-500' : ''}`}
             />
             {validationErrors.day && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.day}</p>
@@ -306,7 +307,7 @@ const EditAppointmentModal = ({
           
           {/* Selector de horarios */}
           <div>
-            <label className="block mb-2">Hora</label>
+            <label className="block mb-2 dark:text-primary">Hora</label>
             {noSlotsAvailable ? (
               <p className="text-red-500">No hay horarios disponibles para esta fecha</p>
             ) : (
@@ -315,7 +316,7 @@ const EditAppointmentModal = ({
                 value={formData.schedule}
                 onChange={handleChange}
                 required
-                className={`w-full p-2 border rounded ${validationErrors.schedule ? 'border-red-500' : ''}`}
+                className={`dark:bg-background dark:border-input w-full p-2 border rounded ${validationErrors.schedule ? 'border-red-500' : ''}`}
               >
                 <option value="">Seleccione un horario</option>
                 {availableTimeSlots.map((time, index) => (
@@ -330,7 +331,7 @@ const EditAppointmentModal = ({
             )}
           </div>
           <div>
-            <label htmlFor="start_address" className="block text-sm font-medium text-gray-700">Dirección de Inicio</label>
+            <label htmlFor="start_address" className="block text-sm font-medium text-gray-700 dark:text-primary">Dirección de Inicio</label>
             <input
               type="text"
               id="start_address"
@@ -338,7 +339,7 @@ const EditAppointmentModal = ({
               value={formData.start_address}
               onChange={handleChange}
               required
-              className={`mt-1 block w-full rounded-md border-gray-300 ${validationErrors.start_address ? 'border-red-500' : ''}`}
+              className={`dark:bg-background dark:border-input dark:ring-offset-background mt-1 block w-full rounded-md border p-2 ${validationErrors.start_address ? 'border-red-500' : ''}`}
               placeholder="Calle número, provincia/localidad"
             />
             {validationErrors.start_address && (
@@ -347,7 +348,7 @@ const EditAppointmentModal = ({
           </div>
 
           <div>
-            <label htmlFor="end_address" className="block text-sm font-medium text-gray-700">Dirección de Destino</label>
+            <label htmlFor="end_address" className="block text-sm font-medium text-gray-700 dark:text-primary">Dirección de Destino</label>
             <input
               type="text"
               id="end_address"
@@ -355,7 +356,7 @@ const EditAppointmentModal = ({
               value={formData.end_address}
               onChange={handleChange}
               required
-              className={`mt-1 block w-full rounded-md border-gray-300 ${validationErrors.end_address ? 'border-red-500' : ''}`}
+              className={`dark:bg-background dark:border-input mt-1 block w-full rounded-md border p-2 ${validationErrors.end_address ? 'border-red-500' : ''}`}
               placeholder="Calle número, provincia/localidad"
             />
             {validationErrors.end_address && (
@@ -386,14 +387,14 @@ const EditAppointmentModal = ({
           )}
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descripción</label>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción</label>
             <textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
               required
-              className={`mt-1 block w-full rounded-md border-gray-300 ${validationErrors.description ? 'border-red-500' : ''}`}
+              className={`dark:bg-background dark:border-input mt-1 block w-full rounded-md border p-2 ${validationErrors.description ? 'border-red-500' : ''}`}
               placeholder="Ingrese una descripción (al menos 10 caracteres)"
               rows={3}
             />
@@ -403,48 +404,47 @@ const EditAppointmentModal = ({
           </div>
 
           <div>
-            <label htmlFor="stairs" className="block text-sm font-medium text-gray-700">Escaleras</label>
+            <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Escaleras</label>
             <input
               type="number"
               id="stairs"
               name="stairs"
               value={formData.stairs}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className="dark:bg-background dark:border-input mt-1 block w-full rounded-md shadow-sm border p-2"
               placeholder="Ingrese el número de escaleras"
             />
           </div>
 
           <div>
-            <label htmlFor="staff" className="block text-sm font-medium text-gray-700">Personal Extra</label>
+            <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary">Personal Extra</label>
             <input
               type="checkbox"
               id="staff"
               name="staff"
               checked={formData.staff}
               onChange={handleChange}
-              className="mt-1 block"
+              className="mt-1 block dark:bg-background"
             />
           </div>
 
           <div>
-            <p className="text-lg font-semibold">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>
+            <p className="text-lg font-semibold dark:text-primary">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>
           </div>
 
           <div className="flex justify-between">
-            <button 
+            <Button 
               type="button" 
               onClick={onClose} 
-              className="bg-gray-500 text-white px-4 py-2 rounded"
+              variant="outline"
             >
               Cancelar
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              className="bg-blue-500 text-white px-4 py-2 rounded"
             >
               Guardar Cambios
-            </button>
+            </Button>
           </div>
         </form>
       </div>

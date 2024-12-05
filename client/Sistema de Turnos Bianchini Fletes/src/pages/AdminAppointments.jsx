@@ -2,9 +2,32 @@ import { useState, useEffect } from 'react'
 import axiosInstance from '../axioConfig.js'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  // eslint-disable-next-line no-unused-vars
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Toaster, toast } from 'sonner'
+import { useTheme } from '../contexts/ThemeContext'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button";
+
 
 const AdminAppointments = () => {
+  const { darkMode } = useTheme();
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
@@ -17,7 +40,6 @@ const AdminAppointments = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelUserInfo, setCancelUserInfo] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
-
 
   const fetchAppointments = async (date) => {
     setLoading(true);
@@ -77,10 +99,10 @@ const AdminAppointments = () => {
   };
   
   const handleAddVan = async (appointment) => {
-    setSelectedAppointment(appointment); // Aseguramos que selectedAppointment esté actualizado
+    setSelectedAppointment(appointment);
     await fetchAvailableVans();
     setShowModalVans(true);
-    setShowModalDetails(false); // Cerramos el modal de detalles si está abierto
+    setShowModalDetails(false);
   };
 
   const handleCloseModal = () => {
@@ -96,7 +118,6 @@ const AdminAppointments = () => {
       setShowUserModal(false)
     }
   };
-
 
   const handleAssignVan = async () => {
     try {
@@ -122,16 +143,13 @@ const AdminAppointments = () => {
   const confirmCancelAppointment = async () => {
     try {
       const response = await axiosInstance.put(`appointment/admin/${selectedAppointment.id}`, {
-        data: { id_user: selectedAppointment.id_user }
+        id: selectedAppointment.id_user
       });
       
       if (response.status === 200) {
-        // Guardar la información del usuario antes de actualizar la lista
-        console.log(response.data)
         setCancelUserInfo(response.data.userInfo);
         setShowUserModal(true)
         
-        // Actualizar la lista de turnos
         await fetchAppointments(selectedDate);
         
         toast.success('Turno cancelado exitosamente');
@@ -144,8 +162,19 @@ const AdminAppointments = () => {
     }
   };
 
+  const handleSendEmail = (email) => {
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`;
+    window.open(gmailUrl, '_blank');
+  };
+
+  const handleSendWhatsApp = (phone) => {
+    // Asumimos que el número de teléfono está en formato internacional
+    const whatsappUrl = `https://wa.me/${phone}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
-    <div className="container mx-auto p-4">
+    <div className={`container mx-auto p-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       <Toaster position="bottom-right" closeButton richColors />
       <h1 className="text-2xl font-bold mb-4">Bienvenido a la gestión de turnos, Administrador</h1>
 
@@ -154,7 +183,7 @@ const AdminAppointments = () => {
           selected={selectedDate}
           onChange={handleDateChange}
           dateFormat="yyyy-MM-dd"
-          className="p-2 border rounded"
+          className={`p-2 border rounded ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
           minDate={new Date()}
         />
       </div>
@@ -163,79 +192,53 @@ const AdminAppointments = () => {
       {message && <p className="text-blue-500">{message}</p>}
 
       {appointments.length > 0 && (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2 text-center">Nombre</th>
-              <th className="border p-2 text-center">Movil</th>
-              <th className="border p-2 text-center">Horario</th>
-              <th className="border p-2 text-center">Dirección inicial</th>
-              <th className="border p-2 text-center">Dirección final</th>
-              <th className="border p-2 text-center">Costo estimado</th>
-              <th className="border p-2 text-center">Estado</th>
-              <th className="border p-2 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((appointment, index) => (
-              <tr key={index}>
-                <td className="border p-2 text-center">{appointment.first_name} {appointment.last_name}</td>
-                <td className="border p-2 text-center">{appointment.driver_name || 'N/A'}</td>
-                <td className="border p-2 text-center">
-                  {appointment.schedule.split(':').slice(0, 2).join(':')}
-                </td>
-                <td className="border p-2 text-center">{appointment.start_address}</td>
-                <td className="border p-2 text-center">{appointment.end_address}</td>
-                <td className="border p-2 text-center">${appointment.cost}</td>
-                <td className="border p-2 text-center">{appointment.state_name}</td>
-                <td className="border p-2 text-center">
-                  <button
-                    onClick={() => handleViewAppointment(appointment)}
-                    className="bg-orange-500 text-white px-2 py-1 rounded mr-2"
-                  >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Movil</TableHead>
+              <TableHead>Horario</TableHead>
+              <TableHead>Dirección inicial</TableHead>
+              <TableHead>Dirección final</TableHead>
+              <TableHead>Costo estimado</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {appointments.map((appointment) => (
+              <TableRow key={appointment.id}>
+                <TableCell>{appointment.first_name} {appointment.last_name}</TableCell>
+                <TableCell>{appointment.driver_name || 'N/A'}</TableCell>
+                <TableCell>{appointment.schedule.split(':').slice(0, 2).join(':')}</TableCell>
+                <TableCell>{appointment.start_address}</TableCell>
+                <TableCell>{appointment.end_address}</TableCell>
+                <TableCell>${appointment.cost}</TableCell>
+                <TableCell>{appointment.state_name}</TableCell>
+                <TableCell>
+                  <Button variant="outline" onClick={() => handleViewAppointment(appointment)} className="mr-2">
                     Ver detalles
-                  </button>
-                  {appointment.driver_name ? (
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAddVan(appointment)} // Pasamos directamente el appointment
-                    >
-                      Cambiar Van     
-                    </button>
-                  ) : (
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAddVan(appointment)} // Pasamos directamente el appointment
-                    >
-                      Agregar Van
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleCancelAppointment(appointment)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
+                  </Button>
+                  <Button variant="outline" onClick={() => handleAddVan(appointment)} className="mr-2">
+                    {appointment.driver_name ? 'Cambiar Van' : 'Agregar Van'}
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleCancelAppointment(appointment)}>
                     Cancelar
-                  </button>
-                </td>
-              </tr>
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
 
-      {selectedAppointment && showModalDetails && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white shadow-lg rounded-lg w-3/4 max-h-3/4 overflow-auto">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-2xl font-bold">Detalles del turno</h2>
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                onClick={handleCloseModal}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="p-6 grid grid-cols-2 gap-4">
+      <Dialog open={showModalDetails} onOpenChange={setShowModalDetails}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalles del turno</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p><strong>Nombre:</strong> {selectedAppointment.first_name} {selectedAppointment.last_name}</p>
                 <p><strong>Movil:</strong> {selectedAppointment.driver_name || 'N/A'}</p>
@@ -249,138 +252,91 @@ const AdminAppointments = () => {
                 <p><strong>Personal:</strong> {selectedAppointment.staff ? 'Si' : 'No'}</p>
                 <p><strong>Estado:</strong> {selectedAppointment.state_name}</p>
               </div>
-              <div>
+              <div className="col-span-1 md:col-span-2">
                 <p><strong>Descripción:</strong> {selectedAppointment.description}</p>
               </div>
             </div>
-            <div className="px-6 py-4 border-t flex justify-end">
-              {selectedAppointment.driver_name ? (
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-                  onClick={() => handleAddVan(selectedAppointment)}
-                >
-                  Cambiar Van     
-                </button>
-              ) : (
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-                  onClick={() => handleAddVan(selectedAppointment)}
-                >
-                  Agregar Van
-                </button>
-              )}
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={handleCloseModal}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showModalVans && selectedAppointment && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white shadow-lg rounded-lg w-3/4 max-h-3/4 overflow-auto">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-2xl font-bold">Seleccionar van</h2>
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                onClick={handleCloseModal}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">Camionetas disponibles:</h3>
-              <ul className='grid grid-cols-3 gap-4 overflow-y-scroll h-96'>
-                {availableVans.map((van) => (
-                  <li
-                    key={van.id}
-                    className={`p-2 rounded cursor-pointer ${
-                      selectedVan?.id === van.id ? 'bg-gray-200' : ''
-                    }`}
-                    onClick={() => handleSelectVan(van)}
-                  >
-                    {van.driver_name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="px-6 py-4 border-t flex justify-end">
-                {selectedAppointment.driver_name ? (
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAssignVan()} // Pasamos directamente el appointment
-                    >
-                      Cambiar Van     
-                    </button>
-                  ) : (
-                    <button
-                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                      onClick={() => handleAssignVan()} // Pasamos directamente el appointment
-                    >
-                      Agregar Van
-                    </button>
-                  )}
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={handleCloseModal}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal de confirmación de cancelación */}
-      {showCancelModal && selectedAppointment && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white shadow-lg rounded-lg w-1/2 p-6">
-            <h2 className="text-2xl font-bold mb-4">Confirmar Cancelación</h2>
-            <p className="mb-4">¿Está seguro que desea cancelar el turno de {selectedAppointment.first_name} {selectedAppointment.last_name}?</p>
-            
-            <div className="flex justify-end space-x-4">
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={() => setShowCancelModal(false)}
-              >
-                No, mantener turno
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={confirmCancelAppointment}
-              >
-                Sí, cancelar turno
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseModal}>Cerrar</Button>
+            <Button onClick={() => handleAddVan(selectedAppointment)}>
+              {selectedAppointment?.driver_name ? 'Cambiar Van' : 'Agregar Van'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Modal de información del usuario cancelado */}
-      {showUserModal && cancelUserInfo && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white shadow-lg rounded-lg w-1/2 p-6">
-            <h2 className="text-2xl font-bold mb-4">Información del Usuario</h2>
-            <div className="mb-4">
+      <Dialog open={showModalVans} onOpenChange={setShowModalVans}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Seleccionar van</DialogTitle>
+            <DialogDescription>
+              Seleccione una van disponible para asignar al turno.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            {availableVans.map((van) => (
+              <Button
+                key={van.id}
+                variant={selectedVan?.id === van.id ? "secondary" : "ghost"}
+                className="w-full justify-start mb-2"
+                onClick={() => handleSelectVan(van)}
+              >
+                {van.driver_name}
+              </Button>
+            ))}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseModal}>Cancelar</Button>
+            <Button onClick={handleAssignVan} disabled={!selectedVan}>
+              {selectedAppointment?.driver_name ? 'Cambiar Van' : 'Agregar Van'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Cancelación</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea cancelar el turno de {selectedAppointment?.first_name} {selectedAppointment?.last_name}?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelModal(false)}>No, mantener turno</Button>
+            <Button variant="destructive" onClick={confirmCancelAppointment}>Sí, cancelar turno</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showUserModal} onOpenChange={setShowUserModal}>
+        <DialogContent className="dark:text-primary">
+          <DialogHeader>
+            <DialogTitle>Información del Usuario</DialogTitle>
+          </DialogHeader>
+          {cancelUserInfo && (
+            <div className="space-y-4">
               <p><strong>Email:</strong> {cancelUserInfo.email}</p>
               <p><strong>Teléfono:</strong> {cancelUserInfo.phone}</p>
+              <div className="flex space-x-2">
+                <Button onClick={() => handleSendEmail(cancelUserInfo.email)}>
+                  Enviar Email
+                </Button>
+                <Button onClick={() => handleSendWhatsApp(cancelUserInfo.phone)}>
+                  Enviar WhatsApp
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex justify-end">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={handleCloseModal}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+          <DialogFooter>
+            <Button onClick={handleCloseModal}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default AdminAppointments;
+

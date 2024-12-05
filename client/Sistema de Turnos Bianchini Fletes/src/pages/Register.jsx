@@ -1,8 +1,11 @@
-// src/pages/Register.jsx
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axioConfig';
 import { Toaster, toast } from 'sonner';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const Register = () => {
   const navigate = useNavigate();
@@ -13,126 +16,148 @@ const Register = () => {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    username: '',
+    password: '',
+    passwordConfirmation: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(password !== passwordConfirmation) {
-      toast.warning('Las contraseñas no coinciden')
+    if(formData.password !== formData.passwordConfirmation) {
+      toast.warning('Las contraseñas no coinciden');
       return;
     }
     try {
       const response = await axiosInstance.post('/session/register', {
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        email,
-        username,
-        password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
       });
 
       if (response.status === 201) {
         toast.success('Registro exitoso');
-        navigate('/login'); // Navega al login si el registro es exitoso
+        navigate('/login');
       }
     } catch (error) {
       console.error('Error en el registro', error);
-      toast.error(error.response.data.error[0].message);
+      if (error.response && error.response.data && error.response.data.error) {
+        toast.error(error.response.data.error[0].message);
+      } else {
+        toast.error('Error en el registro. Por favor, intente nuevamente.');
+      }
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
+    <div className="container mx-auto px-4 py-8">
       <Toaster position="bottom-right" closeButton richColors />
-      <h1 className="text-2xl font-bold mb-4">Registro</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
-          <input 
-            type="text" 
-            id="firstName" 
-            value={firstName} 
-            onChange={(e) => setFirstName(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido</label>
-          <input 
-            type="text" 
-            id="lastName" 
-            value={lastName} 
-            onChange={(e) => setLastName(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Celular</label>
-          <input 
-            type="text" 
-            id="phone" 
-            value={phone} 
-            onChange={(e) => setPhone(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700">Usuario</label>
-          <input 
-            type="text" 
-            id="username" 
-            value={username} 
-            onChange={(e) => setUsername(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-          <input 
-            type="password" 
-            id="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="passwordConfirmation" className="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
-          <input 
-            type="password" 
-            id="passwordConfirmation" 
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)} 
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <button type="submit" className="w-full bg-green-500 text-white p-2 rounded-md">Registrarse</button>
-      </form>
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Registro</CardTitle>
+          <CardDescription>Crea una nueva cuenta para acceder a nuestros servicios.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Nombre</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Apellido</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Celular</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username">Usuario</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="passwordConfirmation">Confirmar contraseña</Label>
+              <Input
+                id="passwordConfirmation"
+                name="passwordConfirmation"
+                type="password"
+                value={formData.passwordConfirmation}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" className="w-full" onClick={(e) => handleSubmit(e)}>
+            Registrarse
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
 
 export default Register;
+

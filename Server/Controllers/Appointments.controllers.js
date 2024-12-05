@@ -186,10 +186,10 @@ export default class AppointmentsControllers {
   deleteAppointmentAdmin = async (req, res) => {
     try {
       const appointmentId = req.params.id
-      const idUser = req.body.id_user
+      const { id } = req.body
 
       // Primero obtener la info del usuario
-      const userInfor = await this.usersDb.getUserInfo(idUser)
+      const userInfor = await this.usersDb.getUserInfo(id)
 
       // Luego eliminar el appointment
       await this.db.deleteAppointment(appointmentId)

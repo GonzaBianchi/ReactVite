@@ -61,13 +61,13 @@ const Home = ({ isAuthenticated, role, username }) => {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-primary text-primary-foreground">
+        <Card>
           <CardHeader>
             <User className="w-16 h-16 mx-auto mb-4" />
             <CardTitle className="text-2xl">
               Bienvenido, {username || (role === 'admin' ? 'Administrador' : 'Usuario')}
             </CardTitle>
-            <CardDescription className="text-primary-foreground/80">
+            <CardDescription>
               {role === 'admin' 
                 ? 'Accede al panel de administración para gestionar los turnos y usuarios.' 
                 : 'Explora nuestras funciones para reservar y gestionar tus turnos.'}

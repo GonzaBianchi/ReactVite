@@ -246,146 +246,154 @@ const Appointments = ({ username }) => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Toaster position="bottom-right" closeButton richColors />
-      <h1 className="text-2xl font-bold mb-4">Programador de Citas</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="container mx-auto p-4 dark:text-primary">
+  <Toaster position="bottom-right" closeButton richColors />
+  <h1 className="text-2xl font-bold mb-4">Programador de Citas</h1>
+  
+  {/* Contenedor para el calendario y los horarios */}
+  <div className="flex flex-col md:flex-row gap-4 mb-4">
+    {/* Columna del calendario */}
+    <div className="w-full md:w-1/2">
+      <Calendar
+        selectedDay={selectedDay}
+        handleDaySelect={handleDaySelect}
+        disabledDays={[{ before: startOfToday() }]}
+        currentMonth={currentMonth}
+        setCurrentMonth={setCurrentMonth}
+      />
+    </div>
+    
+    {/* Columna de los horarios */}
+    <div className="w-full md:w-1/2">
+      {selectedDay && (
+        <div className="bg-white rounded-lg shadow p-4 dark:bg-background dark:border">
+          <h2 className="text-xl font-semibold mb-2 dark:text-primary">
+            Seleccione una hora para {format(selectedDay, 'MMMM d, yyyy')}
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
+            {noSlotsAvailable ? (
+              <p className="text-red-500">No hay citas disponibles para este día</p>
+            ) : (
+              availableTimeSlots.map((time) => (
+                <button
+                  key={time}
+                  onClick={() => handleTimeClick(time)}
+                  className={`py-2 px-4 rounded-md ${
+                    selectedTime === time
+                      ? 'bg-primary text-white dark:bg-transparent dark:text-primary dark:border dark:border-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-primary-foreground dark:text-primary dark:hover:border-white'
+                  }`}
+                >
+                  {time}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+  
+  {/* Formulario debajo del calendario y horarios */}
+  {showForm && (
+    <div className="bg-white rounded-lg shadow p-4 dark:bg-background dark:border dark:border-white dark:text-primary">
+      <h2 className="text-xl font-semibold mb-2">Detalles de la Cita</h2>
+      <form onSubmit={handleSubmit} className="space-y-4 dark:text-primary">
+        <input type="hidden" name="username" value={username} />
         <div>
-          <Calendar
-            selectedDay={selectedDay}
-            handleDaySelect={handleDaySelect}
-            disabledDays={[{ before: startOfToday() }]}
-            currentMonth={currentMonth}
-            setCurrentMonth={setCurrentMonth}
+          <label htmlFor="start_address" className="block text-sm font-medium text-gray-700 dark:text-primary">Dirección de Inicio</label>
+          <input
+            type="text"
+            id="start_address"
+            name="start_address"
+            value={appointmentData.start_address}
+            onChange={handleAddressChange}
+            required
+            className="mt-1 block w-full rounded-md p-2 border dark:bg-transparent dark:border dark:border-white"
+            placeholder="Calle número, provincia/localidad"
           />
-          {selectedDay && (
-            <div className="bg-white rounded-lg shadow p-4 mt-4">
-              <h2 className="text-xl font-semibold mb-2">
-                Seleccione una hora para {format(selectedDay, 'MMMM d, yyyy')}
-              </h2>
-              <div className="grid grid-cols-2 gap-2">
-                {noSlotsAvailable ? (
-                  <p className="text-red-500">No hay citas disponibles para este día</p>
-                ) : (
-                  availableTimeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => handleTimeClick(time)}
-                      className={`py-2 px-4 rounded-md ${
-                        selectedTime === time
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
+        </div>
+        <div>
+          <label htmlFor="end_address" className="block text-sm font-medium text-gray-700 dark:text-primary">Dirección de Destino</label>
+          <input
+            type="text"
+            id="end_address"
+            name="end_address"
+            value={appointmentData.end_address}
+            onChange={handleAddressChange}
+            required
+            className="mt-1 block w-full rounded-md p-2 border dark:bg-transparent dark:border dark:border-white"
+            placeholder="Calle número, provincia/localidad"
+          />
+        </div>
+        <div style={{ height: '400px', width: '100%' }}>
+          {isLoaded ? (
+            <GoogleMap
+              mapContainerStyle={{ height: '100%', width: '100%' }}
+              center={mapCenter}
+              zoom={INITIAL_ZOOM}
+              options={mapOptions}
+              onLoad={(map) => {
+                mapRef.current = map;
+              }}
+            >
+              {/* No need to render DirectionsRenderer or Markers here */}
+            </GoogleMap>
+          ) : (
+            <div>Cargando mapa...</div>
           )}
         </div>
-        
-        {showForm && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-xl font-semibold mb-2">Detalles de la Cita</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input type="hidden" name="username" value={username} />
-              <div>
-                <label htmlFor="start_address" className="block text-sm font-medium text-gray-700">Dirección de Inicio</label>
-                <input
-                  type="text"
-                  id="start_address"
-                  name="start_address"
-                  value={appointmentData.start_address}
-                  onChange={handleAddressChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                  placeholder="Calle número, provincia/localidad"
-                />
-              </div>
-              <div>
-                <label htmlFor="end_address" className="block text-sm font-medium text-gray-700">Dirección de Destino</label>
-                <input
-                  type="text"
-                  id="end_address"
-                  name="end_address"
-                  value={appointmentData.end_address}
-                  onChange={handleAddressChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                  placeholder="Calle número, provincia/localidad"
-                />
-              </div>
-              <div style={{ height: '400px', width: '100%' }}>
-                {isLoaded ? (
-                  <GoogleMap
-                    mapContainerStyle={{ height: '100%', width: '100%' }}
-                    center={mapCenter}
-                    zoom={INITIAL_ZOOM}
-                    options={mapOptions}
-                    onLoad={(map) => {
-                      mapRef.current = map;
-                    }}
-                  >
-                    {/* No need to render DirectionsRenderer or Markers here */}
-                  </GoogleMap>
-                ) : (
-                  <div>Cargando mapa...</div>
-                )}
-              </div>
-              {distance && duration && (
-                <div>
-                  <p>Distancia: {(distance / 1000).toFixed(2)} km</p>
-                  <p>Tiempo estimado de viaje: {duration}</p>
-                </div>
-              )}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descripción</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={appointmentData.description}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                  placeholder="Ingrese una descripción"
-                />
-              </div>
-              <div>
-                <label htmlFor="stairs" className="block text-sm font-medium text-gray-700">Escaleras</label>
-                <input
-                  type="number"
-                  id="stairs"
-                  name="stairs"
-                  value={appointmentData.stairs}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  placeholder="Ingrese el número de escaleras"
-                />
-              </div>
-              <div>
-                <label htmlFor="staff" className="block text-sm font-medium text-gray-700">Personal Extra</label>
-                <input
-                  type="checkbox"
-                  id="staff"
-                  name="staff"
-                  checked={appointmentData.staff}
-                  onChange={handleChange}
-                  className="mt-1 block"
-                />
-              </div>
-              <div>
-                <p className="text-lg font-semibold">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>
-              </div>
-              <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
-                Reservar Turno
-              </button>
-            </form>
+        {distance && duration && (
+          <div>
+            <p>Distancia: {(distance / 1000).toFixed(2)} km</p>
+            <p>Tiempo estimado de viaje: {duration}</p>
           </div>
         )}
-      </div>
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción</label>
+          <textarea
+            id="description"
+            name="description"
+            value={appointmentData.description}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full rounded-md p-2 dark:bg-transparent border dark:border dark:border-white"
+            placeholder="Ingrese una descripción"
+          />
+        </div>
+        <div>
+          <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Escaleras</label>
+          <input
+            type="number"
+            id="stairs"
+            name="stairs"
+            value={appointmentData.stairs}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md shadow-sm p-2 border dark:bg-transparent dark:border dark:border-white"
+            placeholder="Ingrese el número de escaleras"
+          />
+        </div>
+        <div className='flex items-start'>
+          <input
+            type="checkbox"
+            id="staff"
+            name="staff"
+            checked={appointmentData.staff}
+            onChange={handleChange}
+            className="mt-1 block"
+          />
+          <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">Personal Extra</label>
+        </div>
+        <div>
+          <p className="text-lg font-semibold">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>
+        </div>
+        <button type="submit" className="w-full bg-primary text-white py-2 px-4 rounded-md dark:bg-primary-foreground">
+          Reservar Turno
+        </button>
+      </form>
     </div>
+  )}
+</div>
   );
 };
 

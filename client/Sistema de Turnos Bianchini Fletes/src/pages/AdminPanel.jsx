@@ -1,6 +1,29 @@
 import { useState, useEffect } from 'react'
 import axiosInstance from '../axioConfig.js'
 import { Toaster, toast } from 'sonner'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  // eslint-disable-next-line no-unused-vars
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const AdminPanel = () => {
   const [prices, setPrices] = useState([]);
@@ -41,14 +64,14 @@ const AdminPanel = () => {
   }, []);
 
   if (loading) {
-    return <p>Cargando datos...</p>;
+    return <div className="flex justify-center items-center h-screen">Cargando datos...</div>;
   }
 
   if (error) {
-    return <p className="text-red-500">{error}</p>;
+    return <div className="text-destructive text-center">{error}</div>;
   }
 
-  // Funciones para manejar precios
+  // Price management functions
   const handleEditPrice = (price) => {
     setEditingPrice(price);
     setIsPriceModalOpen(true);
@@ -77,7 +100,7 @@ const AdminPanel = () => {
     }
   };
 
-  // Funciones para manejar vans
+  // Van management functions
   const handleAddVan = () => {
     setEditingVan({ driver_name: '', license_plate: '', model: '' });
     setIsVanModalOpen(true);
@@ -153,181 +176,191 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex flex-col justify-between">
+    <div className="container mx-auto p-4 space-y-8">
       <Toaster position="bottom-right" closeButton richColors />
-      <h1 className="text-3xl font-bold mb-6">Bienvenido a la gestión de camionetas y precios, Administrador</h1>
+      <h1 className="text-3xl font-bold">Bienvenido a la gestión de camionetas y precios, Administrador</h1>
       
-      {/* Sección de Precios */}
-      <section className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Gestión de Precios</h2>
-        <div className="grid grid-cols-3 gap-4 mb-2 font-bold">
-          <div>Nombre</div>
-          <div>Precio</div>
-          <div>Acciones</div>
-        </div>
-        {prices.map((price) => (
-          <div key={price.id} className="grid grid-cols-3 gap-4 mb-2 items-center">
-            <div>{price.service_name}</div>
-            <div>${price.price}</div>
-            <button
-              onClick={() => handleEditPrice(price)}
-              className="bg-blue-500 text-white px-4 py-2 rounded w-fit">
-              Editar
-            </button>
-          </div>
-        ))}
-      </section>
+      {/* Prices Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestión de Precios</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {prices.map((price) => (
+                <TableRow key={price.id}>
+                  <TableCell>{price.service_name}</TableCell>
+                  <TableCell>${price.price}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleEditPrice(price)}>
+                      Editar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      {/* Sección de Camionetas */}
-      <section>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Gestión de Camionetas</h2>
-          <button
-            onClick={handleAddVan}
-            className="bg-green-500 text-white px-4 py-2 rounded">
+      {/* Vans Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Gestión de Camionetas</CardTitle>
+          <Button onClick={handleAddVan}>
             Agregar nueva camioneta
-          </button>
-        </div>
-        <div className="grid grid-cols-5 gap-4 mb-2 font-bold">
-          <div>Dueño</div>
-          <div>Patente</div>
-          <div>Modelo</div>
-          <div>Disponible</div>
-          <div>Acciones</div>
-        </div>
-        <div className="h-96 overflow-y-auto">
-          {vans.map((van) => (
-            <div key={van.id} className="grid grid-cols-5 gap-4 mb-6 items-center">
-              <div>{van.driver_name}</div>
-              <div>{van.license_plate}</div>
-              <div>{van.model}</div>
-              <div>{van.available ? 'Disponible' : 'No disponible'}</div>
-              <div className="space-x-2">
-                <button
-                  onClick={() => handleAvailableVan(van.id)}
-                  className="bg-green-500 text-white px-2 py-2 rounded">
-                  {van.available ? 'Deshab' : 'Habilitar'}
-                </button>
-                <button
-                  onClick={() => handleEditVan(van)}
-                  className="bg-blue-500 text-white px-2 py-2 rounded">
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDeleteVan(van.id)}
-                  className="bg-red-500 text-white px-2 py-2 rounded">
-                  Eliminar
-                </button>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[400px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Dueño</TableHead>
+                  <TableHead>Patente</TableHead>
+                  <TableHead>Modelo</TableHead>
+                  <TableHead>Disponible</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vans.map((van) => (
+                  <TableRow key={van.id}>
+                    <TableCell>{van.driver_name}</TableCell>
+                    <TableCell>{van.license_plate}</TableCell>
+                    <TableCell>{van.model}</TableCell>
+                    <TableCell>{van.available ? 'Disponible' : 'No disponible'}</TableCell>
+                    <TableCell>
+                      <div className="space-x-2">
+                        <Button variant="secondary" onClick={() => handleAvailableVan(van.id)}>
+                          {van.available ? 'Deshab' : 'Habilitar'}
+                        </Button>
+                        <Button variant="outline" onClick={() => handleEditVan(van)}>
+                          Editar
+                        </Button>
+                        <Button variant="destructive" onClick={() => handleDeleteVan(van.id)}>
+                          Eliminar
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Price Edit Modal */}
+      <Dialog open={isPriceModalOpen} onOpenChange={setIsPriceModalOpen}>
+        <DialogContent className="text-secondary-foreground dark:text-primary">
+          <DialogHeader>
+            <DialogTitle>Editar Precio</DialogTitle>
+            <DialogDescription>
+              Actualice los detalles del precio aquí. Haga clic en guardar cuando termine.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdatePrice}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="service_name" className="text-right">
+                  Nombre del Servicio
+                </Label>
+                <Input
+                  id="service_name"
+                  value={editingPrice?.service_name || ''}
+                  onChange={(e) => setEditingPrice({...editingPrice, service_name: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="price" className="text-right">
+                  Precio
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={editingPrice?.price || ''}
+                  onChange={(e) => setEditingPrice({...editingPrice, price: e.target.value})}
+                  className="col-span-3"
+                />
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleClosePriceModal}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar cambios</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      {/* Modal de edición de precios */}
-      {isPriceModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4">Editar Precio</h3>
-            <form onSubmit={handleUpdatePrice}>
-              <div className="mb-4">
-                <label htmlFor="service_name" className="block mb-2">Nombre del Servicio</label>
-                <input
-                  type="text"
-                  id="service_name"
-                  value={editingPrice.service_name}
-                  onChange={(e) => setEditingPrice({...editingPrice, service_name: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="price" className="block mb-2">Precio</label>
-                <input
-                  type="number"
-                  id="price"
-                  value={editingPrice.price}
-                  onChange={(e) => setEditingPrice({...editingPrice, price: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={handleClosePriceModal}
-                  className="bg-gray-300 text-black px-4 py-2 rounded">
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded">
-                  Confirmar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de edición/adición de vans */}
-      {isVanModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4">{editingVan.id ? 'Editar' : 'Agregar'} Camioneta</h3>
-            <form onSubmit={handleSaveVan}>
-              <div className="mb-4">
-                <label htmlFor="driver_name" className="block mb-2">Nombre del Conductor</label>
-                <input
-                  type="text"
+      {/* Van Edit/Add Modal */}
+      <Dialog open={isVanModalOpen} onOpenChange={setIsVanModalOpen}>
+        <DialogContent className="text-secondary-foreground dark:text-primary">
+          <DialogHeader>
+            <DialogTitle>{editingVan?.id ? 'Editar' : 'Agregar'} Camioneta</DialogTitle>
+            <DialogDescription>
+              {editingVan?.id ? 'Actualice' : 'Ingrese'} los detalles de la camioneta aquí. Haga clic en guardar cuando termine.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveVan}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="driver_name" className="text-right">
+                  Nombre del Conductor
+                </Label>
+                <Input
                   id="driver_name"
-                  value={editingVan.driver_name}
+                  value={editingVan?.driver_name || ''}
                   onChange={(e) => setEditingVan({...editingVan, driver_name: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
+                  className="col-span-3"
                 />
               </div>
-              <div className="mb-4">
-                <label htmlFor="license_plate" className="block mb-2">Patente</label>
-                <input
-                  type="text"
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="license_plate" className="text-right">
+                  Patente
+                </Label>
+                <Input
                   id="license_plate"
-                  value={editingVan.license_plate}
+                  value={editingVan?.license_plate || ''}
                   onChange={(e) => setEditingVan({...editingVan, license_plate: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
+                  className="col-span-3"
                 />
               </div>
-              <div className="mb-4">
-                <label htmlFor="model" className="block mb-2">Modelo</label>
-                <input
-                  type="text"
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="model" className="text-right">
+                  Modelo
+                </Label>
+                <Input
                   id="model"
-                  value={editingVan.model}
+                  value={editingVan?.model || ''}
                   onChange={(e) => setEditingVan({...editingVan, model: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
+                  className="col-span-3"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={handleCloseVanModal}
-                  className="bg-gray-300 text-black px-4 py-2 rounded">
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded">
-                  {editingVan.id ? 'Actualizar' : 'Agregar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseVanModal}>
+                Cancelar
+              </Button>
+              <Button type="submit">{editingVan?.id ? 'Actualizar' : 'Agregar'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default AdminPanel;
+

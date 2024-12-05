@@ -139,7 +139,7 @@ export default class AppointmentsDaoMysql {
       const [currentVan] = await this.db.query(getCurrentVanQuery, [idAppointment])
 
       // Luego hacer el update
-      const query = 'UPDATE appointments SET id_van = ? WHERE id = ?'
+      const query = 'UPDATE appointments SET id_van = ?, id_state = 3 WHERE id = ?'
       const result = await this.db.query(query, [idVan, idAppointment])
 
       // Retornar tanto el resultado como la van anterior

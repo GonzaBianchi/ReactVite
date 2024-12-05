@@ -86,7 +86,7 @@ export default class SessionControllers {
       }
 
       const user = await this.db.getUserByUsername(username)
-      if (!user) return res.status(400).json({ error: 'El usuario no existe' })
+      if (!user) return res.status(400).json({ error: 'Credenciales inválidas, verifique e intente nuevamente' })
 
       const isValid = await bcrypt.compare(password, user.password)
       if (!isValid) return res.status(400).json({ error: 'Contraseña o usuario incorrecto, intente nuevamente' })

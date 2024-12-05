@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/logo.webp';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { Button } from "@/components/ui/button";
 
 // eslint-disable-next-line react/prop-types
 const Navbar = ({ isAuthenticated, role, handleLogout }) => {
@@ -35,22 +36,16 @@ const Navbar = ({ isAuthenticated, role, handleLogout }) => {
                     <Link to="/profile" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition duration-300">Perfil</Link>
                   </>
                 )}
-                <button 
-                  onClick={handleLogout} 
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-                >
-                  Cerrar sesión
-                </button>
+                <Button onClick={handleLogout}>Cerrar sesión</Button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition duration-300">Iniciar sesión</Link>
-                <Link 
-                  to="/register" 
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-                >
-                  Registro
-                </Link>
+                <Button asChild variant="default">
+                  <Link to="/login" className="flex items-center">Iniciar Sesión</Link>
+                </Button>                
+                <Button asChild variant="secondary">
+                  <Link to="/register" className="flex items-center">Registro</Link>
+                </Button>
               </>
             )}
             <button
@@ -80,8 +75,8 @@ const Navbar = ({ isAuthenticated, role, handleLogout }) => {
         </div>
         {/* Menú móvil */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <div className="md:hidden fixed left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-center">
               <Link to="/" className="block text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition duration-300 py-2" onClick={closeMenu}>Inicio</Link>
               {isAuthenticated ? (
                 <>
@@ -97,26 +92,28 @@ const Navbar = ({ isAuthenticated, role, handleLogout }) => {
                       <Link to="/profile" className="block text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition duration-300 py-2" onClick={closeMenu}>Perfil</Link>
                     </>
                   )}
-                  <button 
+                  <Button 
                     onClick={() => {
                       handleLogout();
                       closeMenu();
-                    }} 
-                    className="w-full text-left bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 mt-2"
+                    }}
+                    className="w-full mt-2"
                   >
                     Cerrar sesión
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition duration-300 py-2" onClick={closeMenu}>Iniciar sesión</Link>
-                  <Link 
-                    to="/register" 
-                    className="block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 mt-2"
-                    onClick={closeMenu}
-                  >
-                    Registro
-                  </Link>
+                  <Button asChild variant="default" className="w-full mt-2">
+                    <Link to="/login" className="flex items-center justify-center" onClick={closeMenu}>
+                      Iniciar Sesión
+                    </Link>
+                  </Button>                
+                  <Button asChild variant="secondary" className="w-full mt-2">
+                    <Link to="/register" className="flex items-center justify-center" onClick={closeMenu}>
+                      Registro
+                    </Link>
+                  </Button>
                 </>
               )}
             </div>
