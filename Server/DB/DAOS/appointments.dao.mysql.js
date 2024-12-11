@@ -112,20 +112,36 @@ export default class AppointmentsDaoMysql {
 
   async getAvailableTimes (day, timeSlots) {
     try {
+      console.log('Executing getAvailableTimes:', { day, timeSlots })
+
       const placeholders = timeSlots.map(() => '?').join(',')
       const query = `
-        SELECT schedule, COUNT(*) as total 
-        FROM ${this.table} 
+        SELECT schedule, COUNT(*) as total
+        FROM ${this.table}
         WHERE day = ? AND schedule IN (${placeholders}) AND is_deleted = FALSE
         GROUP BY schedule
       `
       const params = [day, ...timeSlots]
+
+      console.log('SQL query:', query)
+      console.log('SQL params:', params)
+
       const results = await this.db.query(query, params)
+      console.log('SQL results:', results)
+
       const countMap = results.reduce((acc, { schedule, total }) => {
-        acc[schedule] = total
+        const normalizedSchedule = schedule.slice(0, 5) // '10:00:00' -> '10:00'
+        console.log(`Processing schedule: ${normalizedSchedule} - total: ${total}`)
+        acc[normalizedSchedule] = total
         return acc
       }, {})
-      return timeSlots.filter(hora => (countMap[hora] || 0) < 5)
+      console.log('Count map:', countMap)
+
+      const availableTimes = timeSlots.filter(hora => (countMap[hora] || 0) < 5)
+
+      console.log('Available times:', availableTimes)
+
+      return availableTimes
     } catch (error) {
       console.error('Error in getAvailableTimes:', error)
       throw error

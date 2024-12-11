@@ -1,16 +1,16 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-// eslint-disable-next-line no-unused-vars
-import { GoogleMap, Marker, useJsApiLoader, DirectionsRenderer } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, DirectionsRenderer } from '@react-google-maps/api';
 import Calendar from '../components/Calendar';
 import { format, startOfToday } from 'date-fns';
 import axiosInstance from '../axioConfig';
 import { Toaster, toast } from 'sonner';
+import { debounce } from 'lodash';
 
 const INITIAL_CENTER = { lat: -34.6037, lng: -58.3816 };
 const INITIAL_ZOOM = 12;
 
-const libraries = ['places', 'directions'];
+const libraries = ['places'];
 
 // eslint-disable-next-line react/prop-types
 const Appointments = ({ username }) => {
@@ -29,16 +29,14 @@ const Appointments = ({ username }) => {
   });
   const [prices, setPrices] = useState({ Hour: 0, Escaleras: 0, 'Personal extra': 0, Distancia: 0 });
   const [estimatedPrice, setEstimatedPrice] = useState(0);
-  const [distance, setDistance] = useState(null);
-  const [duration, setDuration] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [directionsResponse, setDirectionsResponse] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [mapCenter, setMapCenter] = useState(INITIAL_CENTER);
-
+  const [directionsResponse, setDirectionsResponse] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [duration, setDuration] = useState(null);
   const mapRef = useRef(null);
-  const markersRef = useRef([]);
   const directionsRendererRef = useRef(null);
+  const markersRef = useRef([]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -46,6 +44,12 @@ const Appointments = ({ username }) => {
     language: 'es',
     region: 'AR'
   });
+
+  // const [mapLoaded, setMapLoaded] = useState(false);
+
+  // const onMapLoad = useCallback(() => {
+  //   setMapLoaded(true);
+  // }, []);
 
   const mapOptions = useMemo(() => ({
     streetViewControl: false,
@@ -55,16 +59,32 @@ const Appointments = ({ username }) => {
   }), []);
 
   const clearMap = useCallback(() => {
+    console.log('Iniciando limpieza del mapa');
+    
+    // Limpiar el renderer actual y sus polylines
     if (directionsRendererRef.current) {
+      console.log('Limpiando DirectionsRenderer');
+      // Primero limpiar las direcciones
+      directionsRendererRef.current.setDirections({ routes: [] });
+      // Luego remover del mapa
       directionsRendererRef.current.setMap(null);
       directionsRendererRef.current = null;
     }
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
+  
+    // Limpiar los marcadores
+    if (markersRef.current && markersRef.current.length > 0) {
+      console.log('Limpiando marcadores:', markersRef.current.length);
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+    }
+  
+    // Resetear estados
     setDirectionsResponse(null);
     setDistance(null);
     setDuration(null);
+    console.log('Limpieza completa');
   }, []);
+
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -105,24 +125,26 @@ const Appointments = ({ username }) => {
 
   const calculateRoute = useCallback(async () => {
     if (!window.google || !appointmentData.start_address || !appointmentData.end_address || !mapRef.current) {
-      clearMap();
       return;
     }
-
+  
+    console.log('Calculando nueva ruta');
+    // Limpiar el mapa antes de calcular la nueva ruta
+    clearMap();
+  
     const directionsService = new window.google.maps.DirectionsService();
+    
     try {
       const results = await directionsService.route({
         origin: appointmentData.start_address + ', Argentina',
         destination: appointmentData.end_address + ', Argentina',
         travelMode: window.google.maps.TravelMode.DRIVING
       });
-
-      clearMap();
-
-      if (directionsRendererRef.current) {
-        directionsRendererRef.current.setMap(null);
-      }
-      directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+  
+      console.log('Nueva ruta calculada');
+  
+      // Crear nuevo DirectionsRenderer
+      const newRenderer = new window.google.maps.DirectionsRenderer({
         suppressMarkers: true,
         polylineOptions: {
           strokeColor: '#1E90FF',
@@ -130,9 +152,12 @@ const Appointments = ({ username }) => {
           strokeWeight: 5
         }
       });
-      directionsRendererRef.current.setDirections(results);
-      directionsRendererRef.current.setMap(mapRef.current);
-
+  
+      // Asignar el nuevo renderer
+      directionsRendererRef.current = newRenderer;
+      newRenderer.setMap(mapRef.current);
+      newRenderer.setDirections(results);
+      
       setDirectionsResponse(results);
       
       if (results.routes[0].bounds) {
@@ -142,8 +167,8 @@ const Appointments = ({ username }) => {
         const leg = results.routes[0].legs[0];
         setDistance(leg.distance.value);
         setDuration(leg.duration.text);
-
-        // Add markers for start and end points
+  
+        // Actualizar marcadores
         const startMarker = new window.google.maps.Marker({
           position: leg.start_location,
           map: mapRef.current,
@@ -154,7 +179,9 @@ const Appointments = ({ username }) => {
           map: mapRef.current,
           title: 'Destino'
         });
+        
         markersRef.current = [startMarker, endMarker];
+        console.log('Marcadores actualizados');
       }
     } catch (error) {
       console.error('Error calculating route:', error);
@@ -163,11 +190,21 @@ const Appointments = ({ username }) => {
     }
   }, [appointmentData.start_address, appointmentData.end_address, clearMap]);
 
+  const debouncedCalculateRoute = useMemo(
+    () => debounce(calculateRoute, 1000),
+    [calculateRoute]
+  );
+
   useEffect(() => {
     if (isLoaded && appointmentData.start_address && appointmentData.end_address) {
-      calculateRoute();
+      debouncedCalculateRoute.cancel(); // Cancela cualquier cálculo pendiente
+      debouncedCalculateRoute();
     }
-  }, [isLoaded, calculateRoute, appointmentData.start_address, appointmentData.end_address]);
+    return () => {
+      debouncedCalculateRoute.cancel();
+      clearMap();
+    };
+  }, [isLoaded, debouncedCalculateRoute, appointmentData.start_address, appointmentData.end_address, clearMap]);
 
   const handleDaySelect = (day, modifiers) => {
     if (modifiers.selected) return;
@@ -242,8 +279,9 @@ const Appointments = ({ username }) => {
   // };
 
   if (loadError) {
-    return <div>Error al cargar Google Maps</div>;
+    return <div>Error al cargar Google Maps: {loadError.message}</div>;
   }
+
 
   return (
     <div className="container mx-auto p-4 dark:text-primary">
@@ -337,7 +375,19 @@ const Appointments = ({ username }) => {
                 mapRef.current = map;
               }}
             >
-              {/* No need to render DirectionsRenderer or Markers here */}
+              {directionsResponse && (
+                <DirectionsRenderer
+                  directions={directionsResponse}
+                  options={{
+                    suppressMarkers: true,
+                    polylineOptions: {
+                      strokeColor: '#1E90FF',
+                      strokeOpacity: 0.8,
+                      strokeWeight: 5
+                    }
+                  }}
+                />
+              )}
             </GoogleMap>
           ) : (
             <div>Cargando mapa...</div>

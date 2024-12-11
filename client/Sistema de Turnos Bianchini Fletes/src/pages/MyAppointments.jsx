@@ -71,7 +71,6 @@ const MyAppointments = ({ username }) => {
           : app
       )
     );
-    // Fetch appointments after update to ensure data consistency
     await fetchAppointments();
   };
 
@@ -90,7 +89,6 @@ const MyAppointments = ({ username }) => {
         if (appointments.length === 1) {
           setMessage('No tienes turnos reservados');
         }
-        // Fetch appointments after deletion to ensure data consistency
         await fetchAppointments();
       } else {
         toast.error('Error al eliminar el turno. Por favor, intente de nuevo.');

@@ -82,6 +82,7 @@ export default class AppointmentsControllers {
       }
       const schedule = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
       const availableTimes = await this.db.getAvailableTimes(day, schedule)
+      console.log(availableTimes)
       return res.status(200).json({ availableTimes })
     } catch (error) {
       console.error('Error al obtener horarios disponibles:', error)
