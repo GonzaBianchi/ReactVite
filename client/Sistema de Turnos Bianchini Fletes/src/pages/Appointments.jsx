@@ -1,11 +1,13 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { GoogleMap, useJsApiLoader, DirectionsRenderer } from '@react-google-maps/api';
 import Calendar from '../components/Calendar';
 import { format, startOfToday } from 'date-fns';
 import axiosInstance from '../axioConfig';
 import { Toaster, toast } from 'sonner';
 import { debounce } from 'lodash';
+import { useNavigate } from 'react-router-dom';
 
 const INITIAL_CENTER = { lat: -34.6037, lng: -58.3816 };
 const INITIAL_ZOOM = 12;
@@ -31,6 +33,7 @@ const Appointments = ({ username }) => {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   // eslint-disable-next-line no-unused-vars
   const [mapCenter, setMapCenter] = useState(INITIAL_CENTER);
+  // eslint-disable-next-line no-unused-vars
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
@@ -45,11 +48,7 @@ const Appointments = ({ username }) => {
     region: 'AR'
   });
 
-  // const [mapLoaded, setMapLoaded] = useState(false);
-
-  // const onMapLoad = useCallback(() => {
-  //   setMapLoaded(true);
-  // }, []);
+  const navigate = useNavigate()
 
   const mapOptions = useMemo(() => ({
     streetViewControl: false,
@@ -125,6 +124,7 @@ const Appointments = ({ username }) => {
 
   const calculateRoute = useCallback(async () => {
     if (!window.google || !appointmentData.start_address || !appointmentData.end_address || !mapRef.current) {
+      clearMap();
       return;
     }
   
@@ -267,6 +267,7 @@ const Appointments = ({ username }) => {
       console.log('Appointment created:', response.data);
       toast.success('Turno creado exitosamente');
       setShowForm(false);
+      navigate(0);
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error('Error al crear turno. Por favor, intente de nuevo.');
@@ -375,7 +376,7 @@ const Appointments = ({ username }) => {
                 mapRef.current = map;
               }}
             >
-              {directionsResponse && (
+              {/* {directionsResponse && (
                 <DirectionsRenderer
                   directions={directionsResponse}
                   options={{
@@ -387,7 +388,7 @@ const Appointments = ({ username }) => {
                     }
                   }}
                 />
-              )}
+              )} */}
             </GoogleMap>
           ) : (
             <div>Cargando mapa...</div>

@@ -1,14 +1,15 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader, DirectionsRenderer } from '@react-google-maps/api';
 import { toast } from 'sonner';
 import axiosInstance from '../axioConfig.js';
 import { format, parseISO, addHours, isAfter } from 'date-fns';
 import { Button } from "@/components/ui/button"
+import { debounce } from 'lodash';
 const INITIAL_CENTER = { lat: -34.6037, lng: -58.3816 };
 const INITIAL_ZOOM = 12;
-const libraries = ['places', 'directions'];
+const libraries = ['places'];
 
 const EditAppointmentModal = ({
   appointment,
@@ -55,6 +56,13 @@ const EditAppointmentModal = ({
     language: 'es',
     region: 'AR'
   });
+
+  const mapOptions = useMemo(() => ({
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    zoomControl: true,
+  }), []);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -180,11 +188,21 @@ const EditAppointmentModal = ({
     }
   }, [formData.start_address, formData.end_address, clearMap]);
 
+  const debouncedCalculateRoute = useMemo(
+    () => debounce(calculateRoute, 1000),
+    [calculateRoute]
+  );
+
   useEffect(() => {
     if (isLoaded && formData.start_address && formData.end_address) {
-      calculateRoute();
+      debouncedCalculateRoute.cancel(); // Cancela cualquier cálculo pendiente
+      debouncedCalculateRoute();
     }
-  }, [isLoaded, calculateRoute, formData.start_address, formData.end_address]);
+    return () => {
+      debouncedCalculateRoute.cancel();
+      clearMap();
+    };
+  }, [isLoaded, debouncedCalculateRoute, formData.start_address, formData.end_address, clearMap]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -279,6 +297,12 @@ const EditAppointmentModal = ({
     return Object.keys(errors).length === 0;
   }, [formData]);
 
+  useEffect(() => {
+    return () => {
+      debouncedCalculateRoute.cancel();
+    };
+  }, [debouncedCalculateRoute]);
+
   if (!isOpen) return null;
 
   if (loadError) {
@@ -370,6 +394,7 @@ const EditAppointmentModal = ({
                 mapContainerStyle={{ height: '100%', width: '100%' }}
                 center={mapCenter}
                 zoom={INITIAL_ZOOM}
+                options={mapOptions}
                 onLoad={(map) => {
                   mapRef.current = map;
                 }}

@@ -20,8 +20,19 @@ export default class VansControllers {
 
   getAvailableVans = async (req, res) => {
     try {
-      const vans = await this.db.getAvailableVans()
-      // console.log('Vans retrieved:', vans)
+      const { date, schedule } = req.query
+
+      console.log(date, schedule)
+
+      // Validar que se proporcionen fecha y horario
+      if (!date || !schedule) {
+        return res.status(400).json({
+          error: 'Se requiere fecha y horario para buscar camionetas disponibles'
+        })
+      }
+
+      const vans = await this.db.getAvailableVans(date, schedule)
+
       res.status(200).json({ vans })
     } catch (error) {
       console.error('Error al obtener las camionetas disponibles:', error)

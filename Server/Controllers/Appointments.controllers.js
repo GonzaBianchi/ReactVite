@@ -96,17 +96,9 @@ export default class AppointmentsControllers {
       const { id_van } = req.body
 
       // Actualizar appointment y obtener van anterior
-      const { result, previousVanId } = await this.db.updateVanAppointment(id, id_van)
+      const { result } = await this.db.updateVanAppointment(id, id_van)
 
       if (result.affectedRows > 0) {
-        // Si había una van anterior, marcarla como available
-        if (previousVanId) {
-          await this.vansDb.updateVanAvailability(previousVanId, true)
-        }
-
-        // Marcar la nueva van como unavailable
-        await this.vansDb.updateVanAvailability(id_van, false)
-
         return res.status(200).json({
           message: 'Turno actualizado correctamente',
           result

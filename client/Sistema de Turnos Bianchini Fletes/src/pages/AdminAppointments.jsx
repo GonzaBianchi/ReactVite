@@ -79,13 +79,21 @@ const AdminAppointments = () => {
     }
   };
   
-  const fetchAvailableVans = async () => {
+  const fetchAvailableVans = async (schedule) => {
     try {
-      const response = await axiosInstance.get('van/available');
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      console.log(schedule, selectedDate)
+      const response = await axiosInstance.get('van/available', {
+        params: {
+          date: formattedDate,
+          schedule
+        }
+      });
+      console.log(response)
       setAvailableVans(response.data.vans);
     } catch (error) {
       console.error('Error al obtener las camionetas disponibles:', error);
-      setMessage('Error al obtener las camionetas disponibles. Por favor, intente nuevamente.');
+      toast.error('Error al obtener las camionetas disponibles. Por favor, intente nuevamente.');
     }
   };
 
@@ -100,9 +108,11 @@ const AdminAppointments = () => {
   
   const handleAddVan = async (appointment) => {
     setSelectedAppointment(appointment);
-    await fetchAvailableVans();
-    setShowModalVans(true);
-    setShowModalDetails(false);
+    if (appointment) {
+      await fetchAvailableVans(appointment.schedule);
+      setShowModalVans(true);
+      setShowModalDetails(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -233,7 +243,7 @@ const AdminAppointments = () => {
       )}
 
       <Dialog open={showModalDetails} onOpenChange={setShowModalDetails}>
-        <DialogContent>
+        <DialogContent className="dark:text-primary">
           <DialogHeader>
             <DialogTitle>Detalles del turno</DialogTitle>
           </DialogHeader>
@@ -267,7 +277,7 @@ const AdminAppointments = () => {
       </Dialog>
 
       <Dialog open={showModalVans} onOpenChange={setShowModalVans}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] dark:text-primary">
           <DialogHeader>
             <DialogTitle>Seleccionar van</DialogTitle>
             <DialogDescription>
@@ -296,7 +306,7 @@ const AdminAppointments = () => {
       </Dialog>
 
       <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-        <DialogContent>
+        <DialogContent className="dark:text-primary">
           <DialogHeader>
             <DialogTitle>Confirmar Cancelación</DialogTitle>
             <DialogDescription>

@@ -32,10 +32,42 @@ export default class VansDaoMysql {
     }
   }
 
-  async getAvailableVans () {
+  async getAvailableVans (date, schedule) {
     try {
-      const query = `SELECT * FROM ${this.table} WHERE available = TRUE`
-      const result = await this.db.query(query)
+      const utcDate = new Date(date)
+      const formattedDate = utcDate.toISOString().split('T')[0]
+
+      const query = `
+        SELECT DISTINCT v.*
+        FROM vans v
+        LEFT JOIN appointments a ON v.id = a.id_van
+          AND DATE(a.day) = ?
+          AND a.is_deleted = FALSE
+          AND (
+            (
+              a.schedule <= ?
+              AND ADDTIME(ADDTIME(a.schedule, a.duration), '01:00:00') > ?
+            )
+            OR
+            (
+              ? <= ADDTIME(ADDTIME(a.schedule, a.duration), '01:00:00')
+              AND ? >= a.schedule
+            )
+          )
+        WHERE 
+          v.available = TRUE 
+          AND a.id IS NULL
+        ORDER BY v.id;
+      `
+
+      const result = await this.db.query(query, [
+        formattedDate,
+        schedule,
+        schedule,
+        schedule,
+        schedule
+      ])
+
       return result
     } catch (error) {
       console.error('Error fetching available vans:', error)

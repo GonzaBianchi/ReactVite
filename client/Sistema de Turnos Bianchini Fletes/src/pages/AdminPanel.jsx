@@ -279,6 +279,7 @@ const AdminPanel = () => {
                   value={editingPrice?.service_name || ''}
                   onChange={(e) => setEditingPrice({...editingPrice, service_name: e.target.value})}
                   className="col-span-3"
+                  disabled
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
