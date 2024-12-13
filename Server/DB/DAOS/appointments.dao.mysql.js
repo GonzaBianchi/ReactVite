@@ -25,6 +25,7 @@ export default class AppointmentsDaoMysql {
           staff BOOLEAN NOT NULL,
           description TEXT NOT NULL,
           is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+          elevator BOOLEAN DEFAULT FALSE,
           FOREIGN KEY (id_van) REFERENCES vans(id) ON UPDATE CASCADE ON DELETE CASCADE,
           FOREIGN KEY (id_user) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
           FOREIGN KEY (id_state) REFERENCES states(id) ON UPDATE CASCADE
@@ -47,12 +48,13 @@ export default class AppointmentsDaoMysql {
         stairs,
         distance,
         staff,
-        description
+        description,
+        elevator
       } = appointment
 
       const query = `INSERT INTO appointments 
-        (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description)
-        VALUES (?, 2, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description, elevator)
+        VALUES (?, 2, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
       const values = [
         id_user,
@@ -65,7 +67,8 @@ export default class AppointmentsDaoMysql {
         stairs,
         distance,
         staff ? 1 : 0,
-        description
+        description,
+        elevator ? 1 : 0
       ]
 
       const result = await this.db.query(query, values)
@@ -78,7 +81,7 @@ export default class AppointmentsDaoMysql {
 
   async getAppointmentsByDay (aDay) {
     const query = `
-      SELECT a.id, a.id_user, u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      SELECT a.id, a.id_user, u.first_name, u.last_name, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description, a.elevator 
       FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
@@ -96,12 +99,13 @@ export default class AppointmentsDaoMysql {
 
   async getAppointmentsByUser (usernameP) {
     const query = `
-      SELECT a.id, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description 
+      SELECT a.id, s.state_name, v.driver_name, a.day, a.schedule, a.start_address, a.end_address, a.duration, a.cost, a.stairs, a.distance, a.staff, a.description, a.elevator 
       FROM ${this.table} a
       INNER JOIN users u ON u.id = a.id_user
       INNER JOIN states s ON s.id = a.id_state
       LEFT JOIN vans v ON v.id = a.id_van
-      WHERE u.username = ? AND a.is_deleted = FALSE AND a.day >= NOW();`
+      WHERE u.username = ? AND a.is_deleted = FALSE AND a.day >= NOW()
+      ORDER BY a.day, a.schedule ASC;`
     try {
       return await this.db.query(query, [usernameP])
     } catch (error) {
@@ -167,7 +171,7 @@ export default class AppointmentsDaoMysql {
     try {
       const query = `UPDATE appointments 
         SET day = ?, schedule = ?, start_address = ?, end_address = ?, 
-        duration = ?, cost = ?, stairs = ?, distance = ?, staff = ?, description = ?
+        duration = ?, cost = ?, stairs = ?, distance = ?, staff = ?, description = ?, elevator = ?
         WHERE id = ?`
 
       const values = [
@@ -181,6 +185,7 @@ export default class AppointmentsDaoMysql {
         updatedData.distance,
         updatedData.staff ? 1 : 0,
         updatedData.description,
+        updatedData.elevator ? 1 : 0,
         appointmentId
       ]
 

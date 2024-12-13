@@ -82,7 +82,9 @@ const EditAppointmentModal = ({
     cost: appointment.cost,
     stairs: appointment.stairs,
     staff: appointment.staff,
-    description: appointment.description
+    description: appointment.description,
+    has_elevator: appointment.elevator,
+    furniture_fits_elevator: appointment.elevator
   });
 
   useEffect(() => {
@@ -104,7 +106,7 @@ const EditAppointmentModal = ({
 
   const calculatePrice = useCallback(() => {
     const basePrice = prices.Hour;
-    const stairsPrice = parseInt(formData.stairs, 10) * prices.Escaleras || 0;
+    const stairsPrice = formData.stairs * prices.Escaleras || 0;
     const staffPrice = formData.staff ? prices['Personal extra'] : 0;
     const distancePrice = distance ? (distance / 1000) * prices.Distancia : 0;
     
@@ -130,11 +132,15 @@ const EditAppointmentModal = ({
 
   const calculateRoute = useCallback(async () => {
     if (!window.google || !formData.start_address || !formData.end_address || !mapRef.current) {
-      clearMap();
+      console.log('No se pueden calcular las direcciones: faltan datos o el mapa no está listo');
       return;
     }
 
+    console.log('Calculando nueva ruta');
+    clearMap();
+
     const directionsService = new window.google.maps.DirectionsService();
+    
     try {
       const results = await directionsService.route({
         origin: formData.start_address + ', Argentina',
@@ -142,7 +148,7 @@ const EditAppointmentModal = ({
         travelMode: window.google.maps.TravelMode.DRIVING
       });
 
-      clearMap();
+      console.log('Nueva ruta calculada');
 
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
@@ -195,7 +201,6 @@ const EditAppointmentModal = ({
 
   useEffect(() => {
     if (isLoaded && formData.start_address && formData.end_address) {
-      debouncedCalculateRoute.cancel(); // Cancela cualquier cálculo pendiente
       debouncedCalculateRoute();
     }
     return () => {
@@ -257,6 +262,12 @@ const EditAppointmentModal = ({
     }
   }, [formData.day, fetchAvailableTimes]);
 
+  useEffect(() => {
+    if (isLoaded && formData.start_address && formData.end_address) {
+      calculateRoute();
+    }
+  }, [isLoaded, formData.start_address, formData.end_address, calculateRoute]);
+
   const validateForm = useCallback(() => {
     const errors = {};
     const currentDate = new Date();
@@ -291,6 +302,11 @@ const EditAppointmentModal = ({
     // Validación de escaleras (opcional, pero si se ingresa debe ser válido)
     if (formData.stairs && (isNaN(formData.stairs) || formData.stairs < 0)) {
       errors.stairs = 'Número de escaleras inválido';
+    }
+
+    // Elevator validation (if needed)
+    if (formData.has_elevator && !formData.furniture_fits_elevator) {
+      errors.furniture_fits_elevator = 'Por favor, indique si los muebles caben en el ascensor';
     }
 
     setValidationErrors(errors);
@@ -412,7 +428,7 @@ const EditAppointmentModal = ({
           )}
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción</label>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción de los muebles a transportar</label>
             <textarea
               id="description"
               name="description"
@@ -420,29 +436,55 @@ const EditAppointmentModal = ({
               onChange={handleChange}
               required
               className={`dark:bg-background dark:border-input mt-1 block w-full rounded-md border p-2 ${validationErrors.description ? 'border-red-500' : ''}`}
-              placeholder="Ingrese una descripción (al menos 10 caracteres)"
+              placeholder="Ingrese una descripción de los muebles con respecto a cantidad y tamaño a transportar en el flete"
               rows={3}
             />
             {validationErrors.description && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
             )}
           </div>
-
-          <div>
-            <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Escaleras</label>
+          <div className='flex items-start mb-2'>
             <input
-              type="number"
-              id="stairs"
-              name="stairs"
-              value={formData.stairs}
+              type="checkbox"
+              id="has_elevator"
+              name="has_elevator"
+              checked={formData.has_elevator}
               onChange={handleChange}
-              className="dark:bg-background dark:border-input mt-1 block w-full rounded-md shadow-sm border p-2"
-              placeholder="Ingrese el número de escaleras"
+              className="mt-1 block"
             />
+            <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
           </div>
 
+          {formData.has_elevator && (
+            <div className='flex items-start mb-2'>
+              <input
+                type="checkbox"
+                id="furniture_fits_elevator"
+                name="furniture_fits_elevator"
+                checked={formData.furniture_fits_elevator}
+                onChange={handleChange}
+                className="mt-1 block"
+              />
+              <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
+            </div>
+          )}
+          {(!formData.has_elevator || !formData.furniture_fits_elevator) && (
+            <div>
+              <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
+              <input
+                type="number"
+                id="stairs"
+                name="stairs"
+                value={formData.stairs}
+                onChange={handleChange}
+                className="dark:bg-background dark:border-input mt-1 block w-full rounded-md shadow-sm border p-2"
+                placeholder="Ingrese el número de escaleras"
+              />
+            </div>
+          )}
+
           <div>
-            <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary">Personal Extra</label>
+            <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary">Desea personal para carga/descarga?</label>
             <input
               type="checkbox"
               id="staff"

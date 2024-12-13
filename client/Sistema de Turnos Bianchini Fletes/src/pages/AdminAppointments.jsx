@@ -258,7 +258,8 @@ const AdminAppointments = () => {
                 <p><strong>Dirección inicial:</strong> {selectedAppointment.start_address}</p>
                 <p><strong>Dirección final:</strong> {selectedAppointment.end_address}</p>
                 <p><strong>Costo estimado:</strong> ${selectedAppointment.cost}</p>
-                <p><strong>Piso:</strong> {selectedAppointment.stairs}</p>
+                <p><strong>Escaleras a subir:</strong> {selectedAppointment.stairs}</p>
+                <p><strong>Ascensor con espacio para muebles:</strong> {selectedAppointment.elevator ? 'Si' : 'No'}</p>
                 <p><strong>Personal:</strong> {selectedAppointment.staff ? 'Si' : 'No'}</p>
                 <p><strong>Estado:</strong> {selectedAppointment.state_name}</p>
               </div>

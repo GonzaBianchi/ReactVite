@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 export default class Appointment {
-  constructor (id_user, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description) {
+  constructor (id_user, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description, elevator) {
     this.id_user = id_user
     this.day = day
     this.schedule = schedule
@@ -12,5 +12,6 @@ export default class Appointment {
     this.distance = distance
     this.staff = staff
     this.description = description
+    this.elevator = elevator
   }
 }

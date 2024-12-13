@@ -7,7 +7,6 @@ import { format, startOfToday } from 'date-fns';
 import axiosInstance from '../axioConfig';
 import { Toaster, toast } from 'sonner';
 import { debounce } from 'lodash';
-import { useNavigate } from 'react-router-dom';
 
 const INITIAL_CENTER = { lat: -34.6037, lng: -58.3816 };
 const INITIAL_ZOOM = 12;
@@ -25,7 +24,9 @@ const Appointments = ({ username }) => {
   const [appointmentData, setAppointmentData] = useState({
     start_address: '',
     end_address: '',
-    stairs: '',
+    has_elevator: false,
+    furniture_fits_elevator: false,
+    stairs: 0,
     description: '',
     staff: false,
   });
@@ -47,8 +48,6 @@ const Appointments = ({ username }) => {
     language: 'es',
     region: 'AR'
   });
-
-  const navigate = useNavigate()
 
   const mapOptions = useMemo(() => ({
     streetViewControl: false,
@@ -104,7 +103,7 @@ const Appointments = ({ username }) => {
 
   const calculatePrice = useCallback(() => {
     const basePrice = prices.Hour;
-    const stairsPrice = parseInt(appointmentData.stairs, 10) * prices.Escaleras || 0;
+    const stairsPrice = appointmentData.stairs * prices.Escaleras || 0;
     const staffPrice = appointmentData.staff ? prices['Personal extra'] : 0;
     const distancePrice = distance ? (distance / 1000) * prices.Distancia : 0;
     
@@ -252,22 +251,23 @@ const Appointments = ({ username }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const appointment = {
+      ...appointmentData,
+      username,
+      day: format(selectedDay, 'yyyy-MM-dd'),
+      schedule: selectedTime,
+      distance: distance ? distance / 1000 : null,
+      duration: duration,
+      cost: estimatedPrice,
+    };
+    console.log('Appointment data:', appointment);
     try {
-      const appointment = {
-        ...appointmentData,
-        username,
-        day: format(selectedDay, 'yyyy-MM-dd'),
-        schedule: selectedTime,
-        distance: distance ? distance / 1000 : null,
-        duration: duration,
-        cost: estimatedPrice,
-      };
 
       const response = await axiosInstance.post('/appointment', appointment);
       console.log('Appointment created:', response.data);
       toast.success('Turno creado exitosamente');
       setShowForm(false);
-      navigate(0);
+      setSelectedDay(undefined);
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error('Error al crear turno. Por favor, intente de nuevo.');
@@ -401,7 +401,7 @@ const Appointments = ({ username }) => {
           </div>
         )}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción</label>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-primary">Descripción de los muebles a transportar</label>
           <textarea
             id="description"
             name="description"
@@ -409,21 +409,49 @@ const Appointments = ({ username }) => {
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md p-2 dark:bg-transparent border dark:border dark:border-white"
-            placeholder="Ingrese una descripción"
+            placeholder="Ingrese una descripción de los muebles con respecto a cantidad y tamaño a transportar en el flete"
           />
         </div>
-        <div>
-          <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Escaleras</label>
+        <div className='flex items-start mb-2'>
           <input
-            type="number"
-            id="stairs"
-            name="stairs"
-            value={appointmentData.stairs}
+            type="checkbox"
+            id="has_elevator"
+            name="has_elevator"
+            checked={appointmentData.has_elevator}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md shadow-sm p-2 border dark:bg-transparent dark:border dark:border-white"
-            placeholder="Ingrese el número de escaleras"
+            className="mt-1 block"
           />
+          <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
         </div>
+
+        {appointmentData.has_elevator && (
+          <div className='flex items-start mb-2'>
+            <input
+              type="checkbox"
+              id="furniture_fits_elevator"
+              name="furniture_fits_elevator"
+              checked={appointmentData.furniture_fits_elevator}
+              onChange={handleChange}
+              className="mt-1 block"
+            />
+            <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
+          </div>
+        )}
+
+        {(!appointmentData.has_elevator || !appointmentData.furniture_fits_elevator) && (
+          <div>
+            <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
+            <input
+              type="number"
+              id="stairs"
+              name="stairs"
+              value={appointmentData.stairs}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md shadow-sm p-2 border dark:bg-transparent dark:border dark:border-white"
+              placeholder="Ingrese el número de escaleras"
+            />
+          </div>
+        )}
         <div className='flex items-start'>
           <input
             type="checkbox"
@@ -433,7 +461,7 @@ const Appointments = ({ username }) => {
             onChange={handleChange}
             className="mt-1 block"
           />
-          <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">Personal Extra</label>
+          <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">Desea personal para carga/descarga?</label>
         </div>
         <div>
           <p className="text-lg font-semibold">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>

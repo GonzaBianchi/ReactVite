@@ -29,11 +29,19 @@ export default class AppointmentsControllers {
       // Ajustar el formato de duración
       const duration = req.body.duration + ':00' // Añadir segundos si no están presentes
 
+      let elevator = false
+      if (req.body.has_elevator && req.body.furniture_fits_elevator) {
+        elevator = true
+      }
+
       const newAppointment = {
         id_user: userId,
         ...req.body,
-        duration
+        duration,
+        elevator
       }
+
+      console.log('New appointment:', newAppointment)
 
       const appointment = this.appointmentHelpers.parseAppointment(newAppointment)
       console.log('Parsed appointment:', appointment)
@@ -140,9 +148,15 @@ export default class AppointmentsControllers {
       // Ajustar el formato de duración
       const duration = req.body.duration + ':00'
 
+      let elevator = false
+      if (req.body.has_elevator && req.body.furniture_fits_elevator) {
+        elevator = true
+      }
+
       const updatedAppointment = {
         ...req.body,
-        duration
+        duration,
+        elevator
       }
 
       const result = await this.db.updateAppointment(id, updatedAppointment)
