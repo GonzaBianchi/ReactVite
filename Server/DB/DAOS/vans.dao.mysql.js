@@ -99,6 +99,23 @@ export default class VansDaoMysql {
     }
   }
 
+  async checkVanHasFutureAppointments (vanId) {
+    try {
+      const query = `
+        SELECT COUNT(*) as appointmentCount
+        FROM appointments 
+        WHERE id_van = ?
+        AND day >= CURDATE()
+        AND is_deleted = FALSE
+      `
+      const [result] = await this.db.query(query, [vanId])
+      return result.appointmentCount > 0
+    } catch (error) {
+      console.error('Error checking van appointments:', error)
+      throw error
+    }
+  }
+
   async updateAvailableVan (idVan) {
     try {
       const query = `UPDATE ${this.table} SET available = NOT available WHERE id = ?`

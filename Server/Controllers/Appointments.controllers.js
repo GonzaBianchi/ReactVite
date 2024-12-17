@@ -20,8 +20,8 @@ export default class AppointmentsControllers {
     try {
       // Validar las direcciones usando el schema de Zod
       const validationResult = validateAppointment(req.body)
-      if (!validationResult.success) {
-        return res.status(400).json({ error: 'Datos de dirección inválidos', details: validationResult.error.errors })
+      if (validationResult.error) {
+        return res.status(400).json({ error: validationResult.error.issues })
       }
 
       const userId = await this.usersDb.getUserIdByUsername(req.body.username)

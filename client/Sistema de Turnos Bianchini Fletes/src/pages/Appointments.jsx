@@ -103,7 +103,7 @@ const Appointments = ({ username }) => {
 
   const calculatePrice = useCallback(() => {
     const basePrice = prices.Hour;
-    const stairsPrice = appointmentData.stairs * prices.Escaleras || 0;
+    const stairsPrice = (!appointmentData.has_elevator || !appointmentData.furniture_fits_elevator) ? (appointmentData.stairs * prices.Escaleras || 0) : 0;
     const staffPrice = appointmentData.staff ? prices['Personal extra'] : 0;
     const distancePrice = distance ? (distance / 1000) * prices.Distancia : 0;
     
@@ -113,7 +113,7 @@ const Appointments = ({ username }) => {
 
   useEffect(() => {
     calculatePrice();
-  }, [appointmentData, prices, distance, calculatePrice]);
+  }, [appointmentData, prices, distance, calculatePrice, appointmentData.has_elevator, appointmentData.furniture_fits_elevator]);
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
@@ -242,10 +242,26 @@ const Appointments = ({ username }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setAppointmentData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setAppointmentData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+
+      // Reset stairs when elevator is available and furniture fits
+      if ((name === 'has_elevator' || name === 'furniture_fits_elevator') && checked) {
+        newData.stairs = 0;
+      }
+
+      // Reset related fields when unchecking staff
+      if (name === 'staff' && !checked) {
+        newData.has_elevator = false;
+        newData.furniture_fits_elevator = false;
+        newData.stairs = 0;
+      }
+
+      return newData;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -415,46 +431,6 @@ const Appointments = ({ username }) => {
         <div className='flex items-start mb-2'>
           <input
             type="checkbox"
-            id="has_elevator"
-            name="has_elevator"
-            checked={appointmentData.has_elevator}
-            onChange={handleChange}
-            className="mt-1 block"
-          />
-          <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
-        </div>
-
-        {appointmentData.has_elevator && (
-          <div className='flex items-start mb-2'>
-            <input
-              type="checkbox"
-              id="furniture_fits_elevator"
-              name="furniture_fits_elevator"
-              checked={appointmentData.furniture_fits_elevator}
-              onChange={handleChange}
-              className="mt-1 block"
-            />
-            <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
-          </div>
-        )}
-
-        {(!appointmentData.has_elevator || !appointmentData.furniture_fits_elevator) && (
-          <div>
-            <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
-            <input
-              type="number"
-              id="stairs"
-              name="stairs"
-              value={appointmentData.stairs}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md shadow-sm p-2 border dark:bg-transparent dark:border dark:border-white"
-              placeholder="Ingrese el número de escaleras"
-            />
-          </div>
-        )}
-        <div className='flex items-start'>
-          <input
-            type="checkbox"
             id="staff"
             name="staff"
             checked={appointmentData.staff}
@@ -463,6 +439,51 @@ const Appointments = ({ username }) => {
           />
           <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">Desea personal para carga/descarga?</label>
         </div>
+
+        {appointmentData.staff && (
+          <>
+            <div className='flex items-start mb-2'>
+              <input
+                type="checkbox"
+                id="has_elevator"
+                name="has_elevator"
+                checked={appointmentData.has_elevator}
+                onChange={handleChange}
+                className="mt-1 block"
+              />
+              <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
+            </div>
+
+            {appointmentData.has_elevator && (
+              <div className='flex items-start mb-2'>
+                <input
+                  type="checkbox"
+                  id="furniture_fits_elevator"
+                  name="furniture_fits_elevator"
+                  checked={appointmentData.furniture_fits_elevator}
+                  onChange={handleChange}
+                  className="mt-1 block"
+                />
+                <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
+              </div>
+            )}
+
+            {(!appointmentData.has_elevator || !appointmentData.furniture_fits_elevator) && (
+              <div>
+                <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
+                <input
+                  type="number"
+                  id="stairs"
+                  name="stairs"
+                  value={appointmentData.stairs}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md shadow-sm p-2 border dark:bg-transparent dark:border dark:border-white"
+                  placeholder="Ingrese el número de escaleras"
+                />
+              </div>
+            )}
+          </>
+        )}
         <div>
           <p className="text-lg font-semibold">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>
         </div>
@@ -477,4 +498,3 @@ const Appointments = ({ username }) => {
 };
 
 export default Appointments;
-

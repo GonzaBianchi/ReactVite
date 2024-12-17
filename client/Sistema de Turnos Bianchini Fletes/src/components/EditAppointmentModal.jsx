@@ -32,15 +32,36 @@ const EditAppointmentModal = ({
   const markersRef = useRef([]);
   const directionsRendererRef = useRef(null);
 
+  // Verifies the changes on the form and updates the state accordingly
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    // Si se cambia la fecha, resetear el horario
+
     if (name === 'day') {
       setFormData(prev => ({
         ...prev,
         [name]: value,
-        schedule: '' // Resetear horario al cambiar fecha
+        schedule: '' // Reset schedule when changing date
+      }));
+    } else if (name === 'staff' && !checked) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+        has_elevator: false,
+        furniture_fits_elevator: false,
+        stairs: 0
+      }));
+    } else if (name === 'has_elevator') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+        furniture_fits_elevator: false,
+        stairs: checked ? 0 : prev.stairs // Reset stairs if elevator is available
+      }));
+    } else if (name === 'furniture_fits_elevator') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+        stairs: checked ? 0 : prev.stairs // Reset stairs if furniture fits in elevator
       }));
     } else {
       setFormData(prev => ({
@@ -88,6 +109,7 @@ const EditAppointmentModal = ({
   });
 
   useEffect(() => {
+    // Fetches the prices from the server
     const fetchPrices = async () => {
       try {
         const response = await axiosInstance.get('/prices');
@@ -104,9 +126,13 @@ const EditAppointmentModal = ({
     fetchPrices();
   }, []);
 
+  // Calculates the total price based on the form data
   const calculatePrice = useCallback(() => {
     const basePrice = prices.Hour;
-    const stairsPrice = formData.stairs * prices.Escaleras || 0;
+    let stairsPrice = 0;
+    if (!formData.has_elevator || (formData.has_elevator && !formData.furniture_fits_elevator)) {
+      stairsPrice = formData.stairs * prices.Escaleras || 0;
+    }
     const staffPrice = formData.staff ? prices['Personal extra'] : 0;
     const distancePrice = distance ? (distance / 1000) * prices.Distancia : 0;
     
@@ -116,7 +142,7 @@ const EditAppointmentModal = ({
 
   useEffect(() => {
     calculatePrice();
-  }, [formData, prices, distance, calculatePrice]);
+  }, [formData, prices, distance, calculatePrice, formData.furniture_fits_elevator]);
 
   const clearMap = useCallback(() => {
     if (directionsRendererRef.current) {
@@ -130,6 +156,7 @@ const EditAppointmentModal = ({
     setDuration(null);
   }, []);
 
+  // Calculates the route based on the form data
   const calculateRoute = useCallback(async () => {
     if (!window.google || !formData.start_address || !formData.end_address || !mapRef.current) {
       console.log('No se pueden calcular las direcciones: faltan datos o el mapa no está listo');
@@ -194,6 +221,7 @@ const EditAppointmentModal = ({
     }
   }, [formData.start_address, formData.end_address, clearMap]);
 
+  // Debounced calculateRoute function
   const debouncedCalculateRoute = useMemo(
     () => debounce(calculateRoute, 1000),
     [calculateRoute]
@@ -302,6 +330,16 @@ const EditAppointmentModal = ({
     // Validación de escaleras (opcional, pero si se ingresa debe ser válido)
     if (formData.stairs && (isNaN(formData.stairs) || formData.stairs < 0)) {
       errors.stairs = 'Número de escaleras inválido';
+    }
+
+    // Staff-related validations
+    if (formData.staff) {
+      if (formData.has_elevator && !formData.furniture_fits_elevator) {
+        errors.furniture_fits_elevator = 'Por favor, indique si los muebles caben en el ascensor';
+      }
+      if (!formData.has_elevator && (!formData.stairs || formData.stairs < 0)) {
+        errors.stairs = 'Por favor, ingrese un número válido de escaleras';
+      }
     }
 
     // Elevator validation (if needed)
@@ -446,54 +484,60 @@ const EditAppointmentModal = ({
           <div className='flex items-start mb-2'>
             <input
               type="checkbox"
-              id="has_elevator"
-              name="has_elevator"
-              checked={formData.has_elevator}
-              onChange={handleChange}
-              className="mt-1 block"
-            />
-            <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
-          </div>
-
-          {formData.has_elevator && (
-            <div className='flex items-start mb-2'>
-              <input
-                type="checkbox"
-                id="furniture_fits_elevator"
-                name="furniture_fits_elevator"
-                checked={formData.furniture_fits_elevator}
-                onChange={handleChange}
-                className="mt-1 block"
-              />
-              <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
-            </div>
-          )}
-          {(!formData.has_elevator || !formData.furniture_fits_elevator) && (
-            <div>
-              <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
-              <input
-                type="number"
-                id="stairs"
-                name="stairs"
-                value={formData.stairs}
-                onChange={handleChange}
-                className="dark:bg-background dark:border-input mt-1 block w-full rounded-md shadow-sm border p-2"
-                placeholder="Ingrese el número de escaleras"
-              />
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary">Desea personal para carga/descarga?</label>
-            <input
-              type="checkbox"
               id="staff"
               name="staff"
               checked={formData.staff}
               onChange={handleChange}
-              className="mt-1 block dark:bg-background"
+              className="mt-1 block"
             />
+            <label htmlFor="staff" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">Desea personal para carga/descarga?</label>
           </div>
+
+          {formData.staff && (
+            <>
+              <div className='flex items-start mb-2'>
+                <input
+                  type="checkbox"
+                  id="has_elevator"
+                  name="has_elevator"
+                  checked={formData.has_elevator}
+                  onChange={handleChange}
+                  className="mt-1 block"
+                />
+                <label htmlFor="has_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Tiene ascensor?</label>
+              </div>
+
+              {formData.has_elevator && (
+                <div className='flex items-start mb-2'>
+                  <input
+                    type="checkbox"
+                    id="furniture_fits_elevator"
+                    name="furniture_fits_elevator"
+                    checked={formData.furniture_fits_elevator}
+                    onChange={handleChange}
+                    className="mt-1 block"
+                  />
+                  <label htmlFor="furniture_fits_elevator" className="block text-sm font-medium text-gray-700 dark:text-primary ml-1">¿Los muebles caben en el ascensor?</label>
+                </div>
+              )}
+
+              {(!formData.has_elevator || (formData.has_elevator && !formData.furniture_fits_elevator)) && (
+                <div>
+                  <label htmlFor="stairs" className="block text-sm font-medium text-gray-700 dark:text-primary">Número de escaleras a subir</label>
+                  <input
+                    type="number"
+                    id="stairs"
+                    name="stairs"
+                    value={formData.stairs}
+                    onChange={handleChange}
+                    className="dark:bg-background dark:border-input mt-1 block w-full rounded-md shadow-sm border p-2"
+                    placeholder="Ingrese el número de escaleras"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
 
           <div>
             <p className="text-lg font-semibold dark:text-primary">Precio Estimado: ${estimatedPrice.toFixed(2)}</p>

@@ -125,7 +125,7 @@ const AdminPanel = () => {
       }
     } catch (error) {
       console.error('Error al cambiar el estado de la camioneta:', error);
-      toast.error('Error al cambiar el estado de la camioneta. Por favor, intente de nuevo.');
+      toast.error(error.response.data.error);
     }
   }
 
@@ -170,7 +170,7 @@ const AdminPanel = () => {
         }
       } catch (error) {
         console.error('Error al eliminar la camioneta:', error);
-        toast.error('Error al eliminar la camioneta. Por favor, intente de nuevo.');
+        toast.error(error.response.data.error);
       }
     }
   };

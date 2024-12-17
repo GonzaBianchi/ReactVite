@@ -100,6 +100,11 @@ export default class VansControllers {
   updateAvailableVan = async (req, res) => {
     try {
       const vanId = req.params.id
+      const hasAppointments = await this.db.checkVanHasFutureAppointments(vanId)
+
+      if (hasAppointments) {
+        return res.status(400).json({ error: 'No se puede deshabilitar una van con citas pendientes' })
+      }
 
       const result = await this.db.updateAvailableVan(vanId)
       res.json(result)
@@ -112,6 +117,12 @@ export default class VansControllers {
   deleteVan = async (req, res) => {
     try {
       const vanId = req.params.id
+      const hasAppointments = await this.db.checkVanHasFutureAppointments(vanId)
+
+      if (hasAppointments) {
+        return res.status(400).json({ error: 'No se puede eliminar una van con citas pendientes' })
+      }
+
       const result = await this.db.deleteVan(vanId)
       res.json(result)
     } catch (error) {

@@ -82,6 +82,17 @@ const Home = ({ isAuthenticated, role, username }) => {
           </CardContent>
         </Card>
       )}
+      <Card className="mt-8">
+      <CardHeader className="cursor-pointer" onClick={() => window.open('https://wa.me/5493424363946', '_blank')}>
+        <CardTitle>¿Tenés dudas?</CardTitle>
+        <CardDescription className="flex flex-col gap-2">
+          No lo pienses más y comunicate con nosotros al WhatsApp para que te ayudemos.
+          <span className="text-primary hover:underline mt-2">
+            Contactanos por WhatsApp →
+          </span>
+        </CardDescription>
+      </CardHeader>
+    </Card>
     </div>
   );
 };
