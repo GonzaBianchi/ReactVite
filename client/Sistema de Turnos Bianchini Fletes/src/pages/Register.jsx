@@ -81,6 +81,7 @@ const Register = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
+                  placeholder="Nombre... e.g. John"
                 />
               </div>
               <div className="space-y-2">
@@ -91,6 +92,7 @@ const Register = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
+                  placeholder="Apellido... e.g. Doe"
                 />
               </div>
             </div>
@@ -102,6 +104,7 @@ const Register = () => {
                 value={formData.phone}
                 onChange={handleChange}
                 required
+                placeholder="Celular... e.g. 3421234567"
               />
             </div>
             <div className="space-y-2">
@@ -113,6 +116,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                placeholder="Email... e.g. john@doe.com"
               />
             </div>
             <div className="space-y-2">
@@ -123,6 +127,7 @@ const Register = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                placeholder="Usuario... e.g. john123"
               />
             </div>
             <div className="space-y-2">
@@ -134,6 +139,7 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                placeholder="Contraseña... e.g. myPassword123"
               />
             </div>
             <div className="space-y-2">
@@ -145,6 +151,7 @@ const Register = () => {
                 value={formData.passwordConfirmation}
                 onChange={handleChange}
                 required
+                placeholder="Confirmar contraseña... e.g. myPassword123"
               />
             </div>
           </form>

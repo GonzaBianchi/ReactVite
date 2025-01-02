@@ -164,7 +164,7 @@ const Profile = () => {
           <DialogTrigger asChild>
             <Button>Actualizar Perfil</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] text-secondary-foreground dark:text-primary">
+          <DialogContent className="sm:max-w-[425px] text-secondary-foreground dark:text-primary overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>Actualizar Perfil</DialogTitle>
               <DialogDescription>

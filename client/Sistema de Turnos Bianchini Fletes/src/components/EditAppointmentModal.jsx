@@ -158,6 +158,29 @@ const EditAppointmentModal = ({
 
   // Calculates the route based on the form data
   const calculateRoute = useCallback(async () => {
+
+    console.log('Calculate Route Called with:', {
+      isLoaded: window.google !== undefined,
+      startAddress: formData.start_address,
+      endAddress: formData.end_address,
+      mapReady: mapRef.current !== null
+    });
+  
+    if (!window.google) {
+      console.error('Google Maps API not loaded');
+      return;
+    }
+  
+    if (!formData.start_address || !formData.end_address) {
+      console.error('Missing addresses');
+      return;
+    }
+  
+    if (!mapRef.current) {
+      console.error('Map not initialized');
+      return;
+    }
+    
     if (!window.google || !formData.start_address || !formData.end_address || !mapRef.current) {
       console.log('No se pueden calcular las direcciones: faltan datos o el mapa no está listo');
       return;

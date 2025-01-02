@@ -54,7 +54,7 @@ export default class AppointmentsDaoMysql {
 
       const query = `INSERT INTO appointments 
         (id_user, id_state, id_van, day, schedule, start_address, end_address, duration, cost, stairs, distance, staff, description, elevator)
-        VALUES (?, 2, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        VALUES (?, 1, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
       const values = [
         id_user,
@@ -170,7 +170,7 @@ export default class AppointmentsDaoMysql {
   async updateAppointment (appointmentId, updatedData) {
     try {
       const query = `UPDATE appointments 
-        SET day = ?, schedule = ?, start_address = ?, end_address = ?, 
+        SET id_van = NULL, id_state = 1, day = ?, schedule = ?, start_address = ?, end_address = ?, 
         duration = ?, cost = ?, stairs = ?, distance = ?, staff = ?, description = ?, elevator = ?
         WHERE id = ?`
 

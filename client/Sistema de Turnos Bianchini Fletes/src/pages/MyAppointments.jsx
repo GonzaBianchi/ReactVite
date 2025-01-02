@@ -133,6 +133,8 @@ const MyAppointments = ({ username }) => {
                 <TableHead className="text-center">Fecha</TableHead>
                 <TableHead className="text-center">Hora</TableHead>
                 <TableHead className="text-center">Costo estimado</TableHead>
+                <TableHead className="text-center">Estado</TableHead>
+                <TableHead className="text-center">Conductor</TableHead>
                 <TableHead className="text-center">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -146,6 +148,10 @@ const MyAppointments = ({ username }) => {
                     {appointment.schedule.split(':').slice(0, 2).join(':')}
                   </TableCell>
                   <TableCell className="text-center">{appointment.cost}</TableCell>
+                  <TableCell className="text-center">{appointment.state_name}</TableCell>
+                  <TableCell className="text-center">
+                    {appointment.driver_name || 'No'}
+                  </TableCell>
                   <TableCell className="text-center">
                     <div className="flex space-x-2 justify-center">
                     {canEditAppointment(appointment.day) && (

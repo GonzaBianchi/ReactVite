@@ -225,7 +225,7 @@ const AdminAppointments = () => {
                 <TableCell>{appointment.end_address}</TableCell>
                 <TableCell>${appointment.cost}</TableCell>
                 <TableCell>{appointment.state_name}</TableCell>
-                <TableCell>
+                <TableCell className="flex justify-end">
                   <Button variant="outline" onClick={() => handleViewAppointment(appointment)} className="mr-2">
                     Ver detalles
                   </Button>
